@@ -1,236 +1,561 @@
-; lib/Gui.ahk - 悬浮窗与配置窗口管理
+; lib/Gui.ahk - 悬浮窗与配置窗口门面 (Facade)
+; 根据 AppConfig.UseWebView2 路由到 WebView2 或原生控件实现
 
 ; -------------------------------------------------------------
-; 悬浮窗 (聊天输入框) - 离屏驻留架构
+; 全局状态
 ; -------------------------------------------------------------
-global chatGui := ""
-global editBox := ""
+global chatGui := ""          ; 原生模式 GUI 对象 (兼容旧代码)
+global editBox := ""          ; 原生模式 Edit 对象 (兼容旧代码)
 global isChatActive := false
 global isAdjusting := false
 global lastShowTime := 0
 global isBoundToGame := false
 
+; 当前使用的引擎实例
+global g_overlayHost := ""    ; WebView2HostInstance 或 ""
+
+; -------------------------------------------------------------
+; 初始化悬浮窗
+; -------------------------------------------------------------
 InitChatGui() {
-    global chatGui, editBox
+    global chatGui, editBox, g_overlayHost
 
-    chatGui := Gui("+AlwaysOnTop -Caption +ToolWindow -DPIScale")
-    chatGui.BackColor := "111317"
-    chatGui.MarginX := 15
-    chatGui.MarginY := 10
-    chatGui.SetFont("s" AppConfig.FontSize " Bold cFFFFFF", AppConfig.FontName)
+    WriteLog("[Gui] InitChatGui 开始, UseWebView2=" AppConfig.UseWebView2)
 
-    ; -E0x0200 抹除 Win32 Edit 默认 3D 白边
-    editBox := chatGui.AddEdit("w480 -Border -E0x0200 Background111317 cFFFFFF")
-
-    ; 修改 Win32 窗口类背景刷子为暗色
-    hDarkBrush := DllCall("CreateSolidBrush", "UInt", 0x00171311, "Ptr")
-    DllCall("SetClassLongPtr", "Ptr", chatGui.Hwnd, "Int", -10, "Ptr", hDarkBrush)
-
-    ; 禁用 DWM 窗口过渡动画
-    dwmDisableAnim := Buffer(4, 0)
-    NumPut("Int", 1, dwmDisableAnim)
-    DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", chatGui.Hwnd, "UInt", 3, "Ptr", dwmDisableAnim, "UInt", 4)
-
-    ; 离屏驻留
-    chatGui.Show("x-9999 y-9999 w510 h48 NA")
-
-    ; 注册 WM_CHAR 拦截 (Zero-CapsLock Toggle)
-    OnMessage(0x0102, WM_CHAR_Callback)
-    OnMessage(0x0201, WM_LBUTTONDOWN)
-}
-
-WM_CHAR_Callback(wParam, lParam, msg, hwnd) {
-    global editBox, isChatActive
-    if (isChatActive && hwnd == editBox.Hwnd) {
-        if (wParam >= 65 && wParam <= 90) {
-            if GetKeyState("Shift", "P")
+    if (AppConfig.UseWebView2) {
+        WriteLog("[Gui] 尝试初始化 WebView2...")
+        if (WebView2Host.Init()) {
+            WriteLog("[Gui] WebView2Host.Init 成功")
+            g_overlayHost := WebView2Host.CreateOverlay()
+            if (g_overlayHost) {
+                g_overlayHost.OnMessage("submit", _OnOverlaySubmit)
+                g_overlayHost.OnMessage("cancel", _OnOverlayCancel)
+                g_overlayHost.OnMessage("ready", _OnOverlayReady)
+                g_overlayHost.OnMessage("resize", _OnOverlayResize)
+                WriteLog("[Gui] WebView2 悬浮窗已创建")
                 return
-            lowerWParam := wParam + 32
-            DllCall("PostMessage", "Ptr", editBox.Hwnd, "UInt", 0x0102, "Ptr", lowerWParam, "Ptr", lParam)
-            return 0
+            } else {
+                WriteLog("[Gui] WebView2 悬浮窗创建失败,降级到原生模式")
+                AppConfig.UseWebView2 := false
+            }
+        } else {
+            WriteLog("[Gui] WebView2Host.Init 失败,降级到原生模式")
+            AppConfig.UseWebView2 := false
         }
     }
+
+    ; 原生模式
+    WriteLog("[Gui] 使用原生模式")
+    InitNativeChatGui()
+    chatGui := nativeChatGui
+    editBox := nativeEditBox
+    WriteLog("[Gui] 原生悬浮窗已创建")
 }
 
-WM_LBUTTONDOWN(wParam, lParam, msg, hwnd) {
-    global chatGui, editBox
-    if (hwnd == chatGui.Hwnd) {
-        editBox.Focus()
-        SetEditCaret()
-    }
-}
-
-SetEditCaret() {
-    global editBox
-    try {
-        DllCall("CreateCaret", "Ptr", editBox.Hwnd, "Ptr", 0, "Int", 2, "Int", 22)
-        DllCall("ShowCaret", "Ptr", editBox.Hwnd)
-    }
-}
-
+; -------------------------------------------------------------
+; 显示悬浮窗
+; -------------------------------------------------------------
 ShowChatGui() {
-    global isChatActive, chatGui, editBox, lastShowTime, isBoundToGame
+    global isChatActive, lastShowTime, isBoundToGame, g_overlayHost, overlayInvokedWindow
 
-    if (isChatActive || (A_TickCount - lastShowTime < 200))
+    WriteLog("[Gui] ShowChatGui 被调用, isChatActive=" isChatActive ", g_overlayHost=" (g_overlayHost ? "存在" : "空"))
+
+    if (isChatActive || (A_TickCount - lastShowTime < 200)) {
+        WriteLog("[Gui] 显示被跳过: isChatActive=" isChatActive ", 时间间隔=" (A_TickCount - lastShowTime))
         return
+    }
+
+    try {
+        overlayInvokedWindow := WinActive("A")
+    } catch {
+        overlayInvokedWindow := 0
+    }
 
     isChatActive := true
     lastShowTime := A_TickCount
+    SetCapsLockSafe("Off")
+    try {
+        IME_SET(1, "A")
+    } catch {
+    }
 
-    gameHwnd := GetGameHwnd()
-    if gameHwnd {
-        try {
-            if (!isBoundToGame || DllCall("GetWindow", "Ptr", chatGui.Hwnd, "UInt", 4, "Ptr") != gameHwnd) {
-                DllCall("SetWindowLongPtr", "Ptr", chatGui.Hwnd, "Int", -8, "Ptr", gameHwnd)
-                isBoundToGame := true
+    if (g_overlayHost) {
+        WriteLog("[Gui] 使用 WebView2 模式")
+        ; WebView2 模式
+        gameHwnd := GetGameHwnd()
+        if gameHwnd {
+            try {
+                WinGetPos(&X, &Y, &W, &H, "ahk_id " gameHwnd)
+                posX := X + W - AppConfig.OffsetX
+                posY := Y + H - AppConfig.OffsetY
+                LimitGuiPos(gameHwnd, &posX, &posY)
+
+                if (!g_overlayHost.Hwnd) {
+                    WriteLog("[Gui] WebView2 未启动,调用 Start()...")
+                    if (!g_overlayHost.Start()) {
+                        WriteLog("[Gui] WebView2 启动失败,降级到原生模式")
+                        g_overlayHost := ""
+                        AppConfig.UseWebView2 := false
+                        isChatActive := false
+                        InitNativeChatGui()
+                        Native_ShowChatGui()
+                        return
+                    }
+                    WriteLog("[Gui] WebView2 启动成功")
+                }
+
+                g_overlayHost.Move(posX, posY)
+                g_overlayHost.Show()
+                g_overlayHost.PostMessage('{"type":"focus"}')
+                g_overlayHost.PostMessage('{"type":"setText","payload":""}')
+                WriteLog("[Gui] WebView2 悬浮窗已显示")
+            } catch TargetError {
+                WriteLog("[Gui] 获取游戏窗口位置失败,使用默认位置")
+                g_overlayHost.Show(100, 100)
             }
-
-            WinGetPos(&X, &Y, &W, &H, "ahk_id " gameHwnd)
-            posX := X + W - AppConfig.OffsetX
-            posY := Y + H - AppConfig.OffsetY
-            LimitGuiPos(gameHwnd, &posX, &posY)
-
-            chatGui.Move(posX, posY)
-        } catch TargetError {
-            chatGui.Move(100, 100)
+        } else {
+            WriteLog("[Gui] 未找到游戏窗口,使用默认位置")
+            if (!g_overlayHost.Hwnd) {
+                if (!g_overlayHost.Start()) {
+                    WriteLog("[Gui] WebView2 启动失败")
+                    isChatActive := false
+                    return
+                }
+            }
+            g_overlayHost.Show(100, 100)
         }
     } else {
-        chatGui.Move(100, 100)
-    }
-
-    chatGui.Show()
-    editBox.Value := ""
-    editBox.Focus()
-    SetEditCaret()
-    SetGuiLayoutToChinese()
-}
-
-SetGuiLayoutToChinese() {
-    global chatGui
-    try {
-        IME_SET(1, "ahk_id " chatGui.Hwnd)
-    } catch Error as err {
-        WriteLog("[SetGuiLayoutToChinese] 异常: " err.Message)
+        WriteLog("[Gui] 使用原生模式")
+        ; 原生模式
+        Native_ShowChatGui()
     }
 }
 
+; -------------------------------------------------------------
+; 隐藏悬浮窗到离屏
+; -------------------------------------------------------------
 HideGuiToOffscreen() {
-    global chatGui
-    chatGui.Move(-9999, -9999)
-    chatGui.Hide()
+    global g_overlayHost
+
+    if (g_overlayHost) {
+        g_overlayHost.Hide()
+    } else {
+        Native_HideGuiToOffscreen()
+    }
+
     gameHwnd := GetGameHwnd()
     if gameHwnd {
         try WinActivate("ahk_id " gameHwnd)
     }
 }
 
-; -------------------------------------------------------------
-; 配置窗口
-; -------------------------------------------------------------
-global configGui := ""
+CloseGui(sendEsc := false) {
+    global isChatActive, nativeIsChatActive
 
-ShowConfigGui() {
-    global configGui
-
-    if (configGui) {
-        configGui.Show()
+    if !isChatActive {
+        nativeIsChatActive := false
         return
     }
 
-    configGui := Gui("+AlwaysOnTop +ToolWindow", "HD2 Chat Overlay - 配置")
-    configGui.BackColor := "1E1E1E"
-    configGui.SetFont("s10 cFFFFFF", "Segoe UI")
-    configGui.MarginX := 20
-    configGui.MarginY := 15
+    isChatActive := false
+    nativeIsChatActive := false
+    ClearInput()
+    HideGuiToOffscreen()
 
-    ; 坐标配置
-    configGui.AddText("w200", "窗口位置偏移 (基于游戏右下角):")
-    configGui.AddText("w80 xm+20", "OffsetX:")
-    editOffsetX := configGui.AddEdit("x+10 w100 Number", AppConfig.OffsetX)
-    configGui.AddText("xm+20 w80", "OffsetY:")
-    editOffsetY := configGui.AddEdit("x+10 w100 Number", AppConfig.OffsetY)
-
-    ; 注入配置
-    configGui.AddText("xm w200", "文本注入参数:")
-    configGui.AddText("xm+20 w80", "分片大小:")
-    editChunkSize := configGui.AddEdit("x+10 w100 Number", AppConfig.ChunkSize)
-    configGui.AddText("xm+20 w80", "分片延迟(ms):")
-    editChunkDelay := configGui.AddEdit("x+10 w100 Number", AppConfig.ChunkDelay)
-
-    ; 字体配置
-    configGui.AddText("xm w200", "悬浮窗字体:")
-    configGui.AddText("xm+20 w80", "字体名称:")
-    ddlFont := configGui.AddDropDownList("x+10 w150 Choose" _GetFontIndex(AppConfig.FontName), ["SimHei", "Microsoft YaHei UI", "Segoe UI", "NSimSun", "Consolas"])
-    configGui.AddText("xm+20 w80", "字体大小:")
-    editFontSize := configGui.AddEdit("x+10 w100 Number", AppConfig.FontSize)
-
-    ; 调试配置
-    chkDebugLog := configGui.AddCheckbox("xm w200 Checked" (AppConfig.EnableDebugLog ? 1 : 0), "启用调试日志")
-
-    ; 按钮
-    btnSave := configGui.AddButton("xm+20 w100 h30", "保存")
-    btnCancel := configGui.AddButton("x+20 w100 h30", "取消")
-    btnReset := configGui.AddButton("x+20 w120 h30", "恢复默认")
-
-    ; 事件绑定
-    btnSave.OnEvent("Click", _SaveConfig.Bind(editOffsetX, editOffsetY, editChunkSize, editChunkDelay, ddlFont, editFontSize, chkDebugLog))
-    btnCancel.OnEvent("Click", _CloseConfig)
-    btnReset.OnEvent("Click", _ResetConfig.Bind(editOffsetX, editOffsetY, editChunkSize, editChunkDelay, ddlFont, editFontSize, chkDebugLog))
-    configGui.OnEvent("Close", _CloseConfig)
-
-    configGui.Show("w420 h420")
-}
-
-_GetFontIndex(fontName) {
-    fonts := ["SimHei", "Microsoft YaHei UI", "Segoe UI", "NSimSun", "Consolas"]
-    for i, f in fonts {
-        if (f = fontName)
-            return i
+    gameHwnd := GetGameHwnd()
+    if gameHwnd {
+        if (sendEsc) {
+            ReleaseModifiers()
+            SendEvent("{Escape}")
+        }
+        DisableGameIME()
     }
-    return 1
 }
 
-_SaveConfig(editOffsetX, editOffsetY, editChunkSize, editChunkDelay, ddlFont, editFontSize, chkDebugLog, *) {
-    global configGui
+; -------------------------------------------------------------
+; 获取输入文本
+; -------------------------------------------------------------
+GetInputText() {
+    global g_overlayHost
 
-    AppConfig.OffsetX := Integer(editOffsetX.Value)
-    AppConfig.OffsetY := Integer(editOffsetY.Value)
-    AppConfig.ChunkSize := Integer(editChunkSize.Value)
-    AppConfig.ChunkDelay := Integer(editChunkDelay.Value)
-    AppConfig.FontName := ddlFont.Text
-    AppConfig.FontSize := Integer(editFontSize.Value)
-    AppConfig.EnableDebugLog := chkDebugLog.Value
+    if (g_overlayHost) {
+        ; WebView2 模式下,文本通过 submit 消息传递
+        ; 此函数主要用于原生模式兼容
+        return ""
+    } else {
+        return Native_GetText()
+    }
+}
+
+; -------------------------------------------------------------
+; 清空输入框
+; -------------------------------------------------------------
+ClearInput() {
+    global g_overlayHost
+
+    if (g_overlayHost) {
+        g_overlayHost.PostMessage('{"type":"setText","payload":""}')
+    } else {
+        Native_ClearText()
+    }
+}
+
+; -------------------------------------------------------------
+; 设置焦点到输入框
+; -------------------------------------------------------------
+FocusInput() {
+    global g_overlayHost
+
+    if (g_overlayHost) {
+        g_overlayHost.PostMessage('{"type":"focus"}')
+    } else {
+        Native_FocusEdit()
+        Native_SetEditCaret()
+    }
+}
+
+; -------------------------------------------------------------
+; 检查悬浮窗是否激活
+; -------------------------------------------------------------
+GetIsChatActive() {
+    global isChatActive, g_overlayHost
+
+    if (g_overlayHost) {
+        return isChatActive && g_overlayHost.IsReady
+    } else {
+        return Native_IsActive()
+    }
+}
+
+; -------------------------------------------------------------
+; 设置悬浮窗激活状态
+; -------------------------------------------------------------
+SetIsChatActive(state) {
+    global isChatActive, g_overlayHost
+
+    isChatActive := state
+
+    if (!g_overlayHost) {
+        Native_SetActive(state)
+    }
+}
+
+; -------------------------------------------------------------
+; 获取悬浮窗句柄
+; -------------------------------------------------------------
+GetChatGuiHwnd() {
+    global g_overlayHost, chatGui
+
+    if (g_overlayHost) {
+        return g_overlayHost.Hwnd
+    } else if (chatGui) {
+        return chatGui.Hwnd
+    }
+    return 0
+}
+
+; -------------------------------------------------------------
+; 获取输入框句柄 (仅原生模式)
+; -------------------------------------------------------------
+GetEditHwnd() {
+    global g_overlayHost, editBox
+
+    if (g_overlayHost) {
+        return 0  ; WebView2 模式下无原生 Edit 句柄
+    } else if (editBox) {
+        return editBox.Hwnd
+    }
+    return 0
+}
+
+; -------------------------------------------------------------
+; 重建悬浮窗 (应用新配置)
+; -------------------------------------------------------------
+RebuildChatGui() {
+    global g_overlayHost, chatGui, editBox
+
+    if (g_overlayHost) {
+        g_overlayHost.Destroy()
+        g_overlayHost := ""
+        g_overlayHost := WebView2Host.CreateOverlay()
+        if (g_overlayHost) {
+            g_overlayHost.OnMessage("submit", _OnOverlaySubmit)
+            g_overlayHost.OnMessage("cancel", _OnOverlayCancel)
+            g_overlayHost.OnMessage("ready", _OnOverlayReady)
+            g_overlayHost.OnMessage("resize", _OnOverlayResize)
+        }
+    } else {
+        Native_RebuildChatGui()
+        chatGui := nativeChatGui
+        editBox := nativeEditBox
+    }
+
+    WriteLog("[Gui] 悬浮窗已重建,字体: " AppConfig.FontName)
+}
+
+; -------------------------------------------------------------
+; 销毁悬浮窗
+; -------------------------------------------------------------
+DestroyChatGui() {
+    global g_overlayHost, chatGui
+
+    if (g_overlayHost) {
+        g_overlayHost.Destroy()
+        g_overlayHost := ""
+    } else {
+        Native_DestroyChatGui()
+        chatGui := ""
+    }
+}
+
+; -------------------------------------------------------------
+; 显示配置窗口
+; -------------------------------------------------------------
+ShowConfigGui() {
+    if (AppConfig.UseWebView2 && WebView2Host.IsAvailable) {
+        configHost := WebView2Host.CreateConfigWindow()
+        if (configHost) {
+            configHost.OnMessage("saveConfig", _OnConfigSave)
+            configHost.OnMessage("cancel", _OnConfigCancel)
+            configHost.OnMessage("preview", _OnConfigPreview)
+            configHost.OnMessage("getConfig", _OnConfigGet)
+            configHost.OnMessage("resetConfig", _OnConfigReset)
+            configHost.Start()
+            configHost.Show()
+            return
+        }
+    }
+
+    ; 原生模式
+    Native_ShowConfigGui()
+}
+
+; -------------------------------------------------------------
+; WebView2 消息回调
+; -------------------------------------------------------------
+_OnOverlaySubmit(payload) {
+    global isChatActive
+    isChatActive := false
+
+    ; payload 是 JSON 字符串,提取 text
+    text := ""
+    if (RegExMatch(payload, '"text"\s*:\s*"((?:[^"\\]|\\.)*)"', &match)) {
+        text := StrReplace(match[1], '\"', '"')
+        text := StrReplace(text, '\\', '\')
+        text := StrReplace(text, '\n', '`n')
+        text := StrReplace(text, '\r', '`r')
+    }
+
+    HideGuiToOffscreen()
+
+    gameHwnd := GetGameHwnd()
+    if gameHwnd && (text != "") {
+        ReleaseModifiers()
+        sanitizedText := RegExReplace(text, "[\r\n]+", " ")
+        SendOptimizedText(sanitizedText)
+        Sleep(30)
+        ReleaseModifiers()
+        SendEvent("{Enter}")
+        DisableGameIME()
+    } else if gameHwnd {
+        ReleaseModifiers()
+        SendEvent("{Enter}")
+        DisableGameIME()
+    }
+}
+
+_OnOverlayCancel(payload) {
+    CloseGui(true)
+}
+
+_OnOverlayReady(payload) {
+    global g_overlayHost
+    WriteLog("[Gui] WebView2 悬浮窗就绪")
+
+    ; 同步当前字体配置
+    if (g_overlayHost) {
+        g_overlayHost.PostMessage('{"type":"setFont","payload":{"family":"' AppConfig.FontName '","size":' AppConfig.FontSize '}}')
+    }
+}
+
+_OnOverlayResize(payload) {
+    global g_overlayHost
+    if (!g_overlayHost)
+        return
+
+    height := 0
+    if (RegExMatch(payload, '"height"\s*:\s*(\d+)', &m))
+        height := Integer(m[1])
+
+    if (height > 0) {
+        ; 仅按高度调整窗口尺寸 (保持固定宽度 510px, 防止宽度循环累加展开)
+        newH := Max(48, height + 16)
+        g_overlayHost.Resize(510, newH)
+    }
+}
+
+_OnConfigGet(payload) {
+    ; 发送当前配置到配置窗口
+    configJson := '{'
+    configJson .= '"OffsetX":' AppConfig.OffsetX ','
+    configJson .= '"OffsetY":' AppConfig.OffsetY ','
+    configJson .= '"ChunkSize":' AppConfig.ChunkSize ','
+    configJson .= '"ChunkDelay":' AppConfig.ChunkDelay ','
+    configJson .= '"FontName":"' AppConfig.FontName '",'
+    configJson .= '"FontSize":' AppConfig.FontSize ','
+    configJson .= '"EnableDebugLog":' (AppConfig.EnableDebugLog ? 1 : 0) ','
+    configJson .= '"GlobalTestMode":' (AppConfig.GlobalTestMode ? 1 : 0) ','
+    configJson .= '"UseWebView2":"' (AppConfig.UseWebView2 ? "webview2" : "native") '"'
+    configJson .= '}'
+
+    configHost := WebView2Host.GetConfigWindow()
+    if (configHost)
+        configHost.PostMessage('{"type":"config","payload":' configJson '}')
+}
+
+_OnConfigReset(payload) {
+    AppConfig.ResetDefaults()
+    _OnConfigGet("")  ; 重新发送默认配置
+    TrayTip("配置已重置", "所有设置已恢复默认值", 1)
+}
+
+_OnConfigSave(payload) {
+    WriteLog("[Gui] 配置保存: " payload)
+
+    ; 解析 JSON 配置
+    if (RegExMatch(payload, '"OffsetX"\s*:\s*(\d+)', &m))
+        AppConfig.OffsetX := Integer(m[1])
+    if (RegExMatch(payload, '"OffsetY"\s*:\s*(\d+)', &m))
+        AppConfig.OffsetY := Integer(m[1])
+    if (RegExMatch(payload, '"ChunkSize"\s*:\s*(\d+)', &m))
+        AppConfig.ChunkSize := Integer(m[1])
+    if (RegExMatch(payload, '"ChunkDelay"\s*:\s*(\d+)', &m))
+        AppConfig.ChunkDelay := Integer(m[1])
+    if (RegExMatch(payload, '"FontName"\s*:\s*"([^"]+)"', &m))
+        AppConfig.FontName := m[1]
+    if (RegExMatch(payload, '"FontSize"\s*:\s*(\d+)', &m))
+        AppConfig.FontSize := Integer(m[1])
+    if (RegExMatch(payload, '"EnableDebugLog"\s*:\s*(\d+)', &m))
+        AppConfig.EnableDebugLog := m[1] = "1"
+    if (RegExMatch(payload, '"GlobalTestMode"\s*:\s*(\d+)', &m))
+        AppConfig.GlobalTestMode := m[1] = "1"
+    if (RegExMatch(payload, '"UseWebView2"\s*:\s*(\d+)', &m)) {
+        newEngine := m[1] = "1"
+        if (newEngine != AppConfig.UseWebView2) {
+            AppConfig.UseWebView2 := newEngine
+            AppConfig.Save()
+            TrayTip("引擎已切换", "已切换到 " (newEngine ? "WebView2" : "原生控件") ",脚本将重启", 1)
+            Sleep(1500)
+            Reload()
+            return
+        }
+    }
 
     AppConfig.Save()
-    WriteLog("[Config] 配置已保存")
-
-    ; 重建悬浮窗以应用新字体
     RebuildChatGui()
 
-    configGui.Hide()
+    ; 通知前端保存成功
+    configHost := WebView2Host.GetConfigWindow()
+    if (configHost)
+        configHost.PostMessage('{"type":"configSaved"}')
 }
 
-_CloseConfig(*) {
-    global configGui
-    configGui.Hide()
+_OnConfigCancel(payload) {
+    configHost := WebView2Host.GetConfigWindow()
+    if (configHost)
+        configHost.Hide()
 }
 
-_ResetConfig(editOffsetX, editOffsetY, editChunkSize, editChunkDelay, ddlFont, editFontSize, chkDebugLog, *) {
-    AppConfig.ResetDefaults()
-    editOffsetX.Value := AppConfig.OffsetX
-    editOffsetY.Value := AppConfig.OffsetY
-    editChunkSize.Value := AppConfig.ChunkSize
-    editChunkDelay.Value := AppConfig.ChunkDelay
-    ddlFont.Value := _GetFontIndex(AppConfig.FontName)
-    editFontSize.Value := AppConfig.FontSize
-    chkDebugLog.Value := AppConfig.EnableDebugLog
-}
+_OnConfigPreview(payload) {
+    WriteLog("[Gui] 配置预览: " payload)
 
-RebuildChatGui() {
-    global chatGui, editBox
-    if (chatGui) {
-        chatGui.Destroy()
+    ; 提取预览字段并应用到悬浮窗
+    fontName := ""
+    fontSize := 0
+    offsetX := 0
+    offsetY := 0
+
+    if (RegExMatch(payload, '"FontName"\s*:\s*"([^"]+)"', &m))
+        fontName := m[1]
+    if (RegExMatch(payload, '"FontSize"\s*:\s*(\d+)', &m))
+        fontSize := Integer(m[1])
+    if (RegExMatch(payload, '"OffsetX"\s*:\s*(\d+)', &m))
+        offsetX := Integer(m[1])
+    if (RegExMatch(payload, '"OffsetY"\s*:\s*(\d+)', &m))
+        offsetY := Integer(m[1])
+
+    ; 应用字体预览
+    if (fontName != "" && fontSize > 0) {
+        if (g_overlayHost) {
+            g_overlayHost.PostMessage('{"type":"setFont","payload":{"family":"' fontName '","size":' fontSize '}}')
+        }
     }
-    InitChatGui()
-    WriteLog("[Gui] 悬浮窗已重建,应用新字体: " AppConfig.FontName)
+
+    ; 应用位置预览
+    if (offsetX > 0 && offsetY > 0) {
+        gameHwnd := GetGameHwnd()
+        if gameHwnd {
+            try {
+                WinGetPos(&X, &Y, &W, &H, "ahk_id " gameHwnd)
+                posX := X + W - offsetX
+                posY := Y + H - offsetY
+                LimitGuiPos(gameHwnd, &posX, &posY)
+
+                if (g_overlayHost) {
+                    g_overlayHost.Move(posX, posY)
+                } else if (nativeChatGui) {
+                    nativeChatGui.Move(posX, posY)
+                }
+            }
+        }
+    }
+}
+
+
+
+; -------------------------------------------------------------
+; 位置调整
+; -------------------------------------------------------------
+AdjustGuiPos(deltaX, deltaY) {
+    global isAdjusting, g_overlayHost
+
+    isAdjusting := true
+
+    AppConfig.OffsetX := AppConfig.OffsetX - deltaX
+    AppConfig.OffsetY := AppConfig.OffsetY - deltaY
+
+    gameHwnd := GetGameHwnd()
+    if gameHwnd {
+        try {
+            WinGetPos(&X, &Y, &W, &H, "ahk_id " gameHwnd)
+            posX := X + W - AppConfig.OffsetX
+            posY := Y + H - AppConfig.OffsetY
+            LimitGuiPos(gameHwnd, &posX, &posY)
+            AppConfig.OffsetX := X + W - posX
+            AppConfig.OffsetY := Y + H - posY
+
+            if (g_overlayHost) {
+                g_overlayHost.Move(posX, posY)
+            } else {
+                nativeChatGui.Move(posX, posY)
+            }
+        } catch TargetError {
+        }
+    }
+
+    FocusInput()
+    SetTimer(OnAdjustTimeout, -200)
+}
+
+OnAdjustTimeout() {
+    global isAdjusting, g_overlayHost, chatGui
+
+    isAdjusting := false
+    AppConfig.Save()
+
+    activeHwnd := WinActive("A")
+    guiHwnd := g_overlayHost ? g_overlayHost.Hwnd : (chatGui ? chatGui.Hwnd : 0)
+    if (activeHwnd != guiHwnd) {
+        CloseGui(false)
+    }
 }

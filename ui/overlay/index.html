@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HD2 Chat Overlay</title>
+    <link rel="stylesheet" href="overlay.css">
+</head>
+<body>
+    <div id="overlay-container">
+        <div id="input-wrapper">
+            <div id="chat-icon">💬</div>
+            <textarea
+                id="chat-input"
+                placeholder="输入中文消息..."
+                rows="1"
+                autofocus
+            ></textarea>
+            <div id="send-icon" title="发送 (Enter)">🎤</div>
+        </div>
+        <div id="ime-hint" style="display: none;">拼音输入中...</div>
+    </div>
+
+    <script src="overlay.js"></script>
+</body>
+</html>

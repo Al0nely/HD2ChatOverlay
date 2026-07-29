@@ -1,4 +1,4 @@
-; lib/Utils.ahk - 日志缓冲、IME 控制、Win32 封装、单实例锁
+; lib/Utils.ahk - 日志缓冲、IME 控制、Win32 封装、单实例锁、DPI 辅助
 
 ; -------------------------------------------------------------
 ; 日志缓冲批量写入系统
@@ -137,18 +137,21 @@ DisableGameIME() {
 ; -------------------------------------------------------------
 ; 多显示器工作区计算
 ; -------------------------------------------------------------
-GetGameMonitorWorkArea(gameHwnd, &left, &top, &right, &bottom) {
+GetGameMonitorWorkArea(targetHwnd, &left, &top, &right, &bottom) {
     left := 0, top := 0, right := A_ScreenWidth, bottom := A_ScreenHeight
     try {
         MonitorGetWorkArea(MonitorGetPrimary(), &left, &top, &right, &bottom)
     } catch {
     }
 
-    if !gameHwnd
+    if (!targetHwnd || !WinExist("ahk_id " targetHwnd))
         return
 
     try {
-        WinGetPos(&gx, &gy, &gw, &gh, "ahk_id " gameHwnd)
+        WinGetPos(&gx, &gy, &gw, &gh, "ahk_id " targetHwnd)
+        if (gx == -32000 || gy == -32000) ; 忽略最小化窗口坐标
+            return
+
         gcx := gx + (gw // 2)
         gcy := gy + (gh // 2)
 
@@ -163,8 +166,13 @@ GetGameMonitorWorkArea(gameHwnd, &left, &top, &right, &bottom) {
     }
 }
 
-LimitGuiPos(gameHwnd, &posX, &posY, guiWidth := 510, guiHeight := 48) {
-    GetGameMonitorWorkArea(gameHwnd, &minX, &minY, &maxX, &maxY)
+LimitGuiPos(targetHwnd, &posX, &posY, guiWidth := 0, guiHeight := 0) {
+    if (guiWidth = 0)
+        guiWidth := 510
+    if (guiHeight = 0)
+        guiHeight := AppConfig.UseWebView2 ? 120 : 50
+
+    GetGameMonitorWorkArea(targetHwnd, &minX, &minY, &maxX, &maxY)
     if (posX < minX)
         posX := minX
     if (posY < minY)
@@ -173,6 +181,69 @@ LimitGuiPos(gameHwnd, &posX, &posY, guiWidth := 510, guiHeight := 48) {
         posX := maxX - guiWidth
     if (posY + guiHeight > maxY)
         posY := maxY - guiHeight
+}
+
+; -------------------------------------------------------------
+; DPI 感知与坐标换算
+; -------------------------------------------------------------
+
+; 设置进程 DPI 感知为 PerMonitorV2
+SetProcessDpiAwareness() {
+    try {
+        ; DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = -4
+        DllCall("SetProcessDpiAwarenessContext", "Ptr", -4, "UInt")
+        WriteLog("[DPI] 已设置 PerMonitorV2 DPI 感知")
+        return true
+    } catch {
+        try {
+            ; 兼容旧系统: SetProcessDPIAware
+            DllCall("SetProcessDPIAware", "UInt")
+            WriteLog("[DPI] 已设置系统级 DPI 感知")
+            return true
+        } catch {
+            WriteLog("[DPI] DPI 感知设置失败")
+            return false
+        }
+    }
+}
+
+; 获取窗口所属显示器的 DPI
+GetWindowDpi(hwnd) {
+    try {
+        dpi := DllCall("GetDpiForWindow", "Ptr", hwnd, "UInt")
+        return dpi ? dpi : 96
+    } catch {
+        return 96
+    }
+}
+
+; 获取系统 DPI
+GetSystemDpi() {
+    try {
+        hdc := DllCall("GetDC", "Ptr", 0, "Ptr")
+        dpi := DllCall("GetDeviceCaps", "Ptr", hdc, "Int", 88, "Int")  ; LOGPIXELSX
+        DllCall("ReleaseDC", "Ptr", 0, "Ptr", hdc)
+        return dpi ? dpi : 96
+    } catch {
+        return 96
+    }
+}
+
+; DPI 缩放因子
+GetDpiScale(hwnd := 0) {
+    dpi := hwnd ? GetWindowDpi(hwnd) : GetSystemDpi()
+    return dpi / 96.0
+}
+
+; 逻辑像素 -> 物理像素
+LogicalToPhysical(value, hwnd := 0) {
+    return Round(value * GetDpiScale(hwnd))
+}
+
+; 物理像素 -> 逻辑像素
+PhysicalToLogical(value, hwnd := 0) {
+    scale := GetDpiScale(hwnd)
+    return scale != 0 ? Round(value / scale) : value
 }
 
 ; -------------------------------------------------------------

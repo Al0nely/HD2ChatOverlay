@@ -1,14 +1,15 @@
 ; lib/Tray.ahk - 系统托盘菜单系统
 
-global SCRIPT_VERSION := "1.0.0"
+global SCRIPT_VERSION := "1.1.0"
 
 InitTrayMenu() {
     ; 清空默认菜单
     A_TrayMenu.Delete()
 
     ; 标题项
-    A_TrayMenu.Add("HD2 Chat Overlay v" SCRIPT_VERSION, _TrayNoop)
-    A_TrayMenu.Disable("HD2 Chat Overlay v" SCRIPT_VERSION)
+    engineText := AppConfig.UseWebView2 ? "WebView2" : "原生"
+    A_TrayMenu.Add("HD2 Chat Overlay v" SCRIPT_VERSION " (" engineText ")", _TrayNoop)
+    A_TrayMenu.Disable("HD2 Chat Overlay v" SCRIPT_VERSION " (" engineText ")")
     A_TrayMenu.Add() ; 分隔线
 
     ; 配置窗口
@@ -25,6 +26,20 @@ InitTrayMenu() {
 
     A_TrayMenu.Add() ; 分隔线
 
+    ; 配置回滚
+    if (AppConfig.HasBackup()) {
+        A_TrayMenu.Add("🔄 回滚到上一版本配置", _TrayRollbackConfig)
+    } else {
+        A_TrayMenu.Add("🔄 回滚到上一版本配置", _TrayNoop)
+        A_TrayMenu.Disable("🔄 回滚到上一版本配置")
+    }
+
+    ; 渲染引擎切换
+    engineSwitchText := AppConfig.UseWebView2 ? "🔧 切换到原生控件" : "🔧 切换到 WebView2"
+    A_TrayMenu.Add(engineSwitchText, _TrayToggleEngine)
+
+    A_TrayMenu.Add() ; 分隔线
+
     ; 关于
     A_TrayMenu.Add("ℹ️ 关于", _TrayAbout)
 
@@ -35,7 +50,7 @@ InitTrayMenu() {
     A_TrayMenu.Default := "⚙️ 打开配置窗口"
 
     ; 托盘图标提示
-    A_IconTip := "HD2 Chat Overlay v" SCRIPT_VERSION "`n在游戏中按 Enter 唤醒输入框"
+    A_IconTip := "HD2 Chat Overlay v" SCRIPT_VERSION " (" engineText ")`n在游戏中按 Enter 唤醒输入框"
 }
 
 _TrayNoop(*) {
@@ -58,10 +73,31 @@ _TrayToggleTestMode(*) {
     AppConfig.Save()
 }
 
+_TrayRollbackConfig(*) {
+    if (AppConfig.Rollback()) {
+        TrayTip("配置已回滚", "已恢复到上一版本配置,脚本将重启", 1)
+        Sleep(1500)
+        Reload()
+    } else {
+        TrayTip("回滚失败", "无可用备份或恢复出错", 2)
+    }
+}
+
+_TrayToggleEngine(*) {
+    AppConfig.UseWebView2 := !AppConfig.UseWebView2
+    AppConfig.Save()
+    engineText := AppConfig.UseWebView2 ? "WebView2" : "原生控件"
+    TrayTip("引擎已切换", "已切换到 " engineText " 模式,脚本将重启", 1)
+    Sleep(1500)
+    Reload()
+}
+
 _TrayAbout(*) {
+    engineText := AppConfig.UseWebView2 ? "WebView2 (推荐)" : "原生控件 (兼容)"
     MsgBox(
         "HD2 Chat Overlay v" SCRIPT_VERSION "`n`n"
         "《绝地潜兵 2》中文输入悬浮窗插件`n`n"
+        "渲染引擎: " engineText "`n`n"
         "快捷键:`n"
         "  Enter - 唤醒输入框`n"
         "  Enter - 发送文本`n"
@@ -75,6 +111,7 @@ _TrayAbout(*) {
 }
 
 _TrayExit(*) {
+    WebView2Host.Shutdown()
     ReleaseSingleInstance()
     ExitApp()
 }

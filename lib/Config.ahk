@@ -1,41 +1,52 @@
 ; lib/Config.ahk - 配置管理与 INI 持久化
-; 配置节: [Coordinates], [Injection], [Debug], [UI], [Mode]
+; 配置节: [Coordinates], [Injection], [Debug], [UI], [Mode], [Engine]
 
 class AppConfig {
     static iniPath := A_ScriptDir "\hd2_chat_settings.ini"
+    static backupCount := 3
 
     ; 坐标配置
     static OffsetX := 840
     static OffsetY := 638
 
     ; 注入配置
-    static ChunkSize := 8
-    static ChunkDelay := 5
+    static ChunkSize := 1
+    static ChunkDelay := 15
 
     ; 调试配置
-    static EnableDebugLog := false
+    static EnableDebugLog := true
 
     ; UI 配置
     static FontName := "SimHei"
-    static FontSize := 18
+    static FontSize := 16
+    static OverlayWidth := 640
+    static OverlayHeight := 58
 
     ; 模式配置
     static GlobalTestMode := false
+
+    ; 引擎配置 (默认使用超快零延迟 Native 原生控件)
+    static UseWebView2 := false
 
     ; 从 INI 加载全部配置
     static Load() {
         this.OffsetX := this._ReadInt("Coordinates", "OffsetX", 840)
         this.OffsetY := this._ReadInt("Coordinates", "OffsetY", 638)
-        this.ChunkSize := this._ReadInt("Injection", "ChunkSize", 8)
-        this.ChunkDelay := this._ReadInt("Injection", "ChunkDelay", 5)
-        this.EnableDebugLog := this._ReadBool("Debug", "EnableDebugLog", false)
+        this.ChunkSize := this._ReadInt("Injection", "ChunkSize", 1)
+        this.ChunkDelay := this._ReadInt("Injection", "ChunkDelay", 15)
+        this.EnableDebugLog := this._ReadBool("Debug", "EnableDebugLog", true)
         this.FontName := this._ReadStr("UI", "FontName", "SimHei")
-        this.FontSize := this._ReadInt("UI", "FontSize", 18)
+        this.FontSize := this._ReadInt("UI", "FontSize", 16)
+        this.OverlayWidth := this._ReadInt("UI", "OverlayWidth", 640)
+        this.OverlayHeight := this._ReadInt("UI", "OverlayHeight", 58)
         this.GlobalTestMode := this._ReadBool("Mode", "GlobalTestMode", false)
+        this.UseWebView2 := this._ReadBool("Engine", "UseWebView2", false)
     }
 
-    ; 保存全部配置到 INI
+    ; 保存全部配置到 INI (自动备份)
     static Save() {
+        this._CreateBackup()
+
         try {
             IniWrite(String(this.OffsetX), this.iniPath, "Coordinates", "OffsetX")
             IniWrite(String(this.OffsetY), this.iniPath, "Coordinates", "OffsetY")
@@ -44,7 +55,10 @@ class AppConfig {
             IniWrite(this.EnableDebugLog ? "1" : "0", this.iniPath, "Debug", "EnableDebugLog")
             IniWrite(this.FontName, this.iniPath, "UI", "FontName")
             IniWrite(String(this.FontSize), this.iniPath, "UI", "FontSize")
+            IniWrite(String(this.OverlayWidth), this.iniPath, "UI", "OverlayWidth")
+            IniWrite(String(this.OverlayHeight), this.iniPath, "UI", "OverlayHeight")
             IniWrite(this.GlobalTestMode ? "1" : "0", this.iniPath, "Mode", "GlobalTestMode")
+            IniWrite(this.UseWebView2 ? "1" : "0", this.iniPath, "Engine", "UseWebView2")
         } catch Error as err {
             WriteLog("[Config] 保存失败: " err.Message)
         }
@@ -54,12 +68,60 @@ class AppConfig {
     static ResetDefaults() {
         this.OffsetX := 840
         this.OffsetY := 638
-        this.ChunkSize := 8
-        this.ChunkDelay := 5
+        this.ChunkSize := 1
+        this.ChunkDelay := 15
         this.EnableDebugLog := false
         this.FontName := "SimHei"
-        this.FontSize := 18
+        this.FontSize := 16
+        this.OverlayWidth := 640
+        this.OverlayHeight := 58
         this.GlobalTestMode := false
+        this.UseWebView2 := false
+    }
+
+    ; 创建配置备份 (滚动保留最近 N 份)
+    static _CreateBackup() {
+        if !FileExist(this.iniPath)
+            return
+
+        try {
+            ; 滚动备份: .bak.2 -> .bak.3, .bak.1 -> .bak.2, .bak -> .bak.1
+            loop this.backupCount - 1 {
+                src := this.iniPath ".bak." (this.backupCount - A_Index)
+                dst := this.iniPath ".bak." (this.backupCount - A_Index + 1)
+                if FileExist(src)
+                    FileMove(src, dst, true)
+            }
+
+            ; 当前配置 -> .bak
+            FileCopy(this.iniPath, this.iniPath ".bak", true)
+        } catch Error as err {
+            WriteLog("[Config] 备份失败: " err.Message)
+        }
+    }
+
+    ; 回滚到最近备份
+    static Rollback() {
+        backupPath := this.iniPath ".bak"
+        if !FileExist(backupPath) {
+            WriteLog("[Config] 无备份可回滚")
+            return false
+        }
+
+        try {
+            FileCopy(backupPath, this.iniPath, true)
+            this.Load()
+            WriteLog("[Config] 已回滚到备份配置")
+            return true
+        } catch Error as err {
+            WriteLog("[Config] 回滚失败: " err.Message)
+            return false
+        }
+    }
+
+    ; 检查是否存在备份
+    static HasBackup() {
+        return FileExist(this.iniPath ".bak")
     }
 
     static _ReadInt(section, key, defaultVal) {

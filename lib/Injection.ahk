@@ -8,30 +8,14 @@ SendOptimizedText(rawText) {
         return
 
     len := StrLen(rawText)
-    chunkSize := AppConfig.ChunkSize
-    delayMs := AppConfig.ChunkDelay
+    delayMs := AppConfig.ChunkDelay > 0 ? AppConfig.ChunkDelay : 15
+    WriteLog("[Injection] 逐字帧同步 Unicode 注入: 长度=" len ", 字间延迟=" delayMs "ms")
 
-    ; 动态调整: 短文本不分片,长文本增大分片减少 Sleep 次数
-    if (len <= 8) {
-        chunkSize := len
-        delayMs := 0
-    } else if (len <= 32) {
-        chunkSize := 16
-        delayMs := 3
-    } else {
-        chunkSize := 32
-        delayMs := 2
-    }
-
-    WriteLog("[Injection] 文本长度=" len ", 动态分片=" chunkSize ", 延迟=" delayMs "ms")
-
-    pos := 1
-    while (pos <= len) {
-        chunk := SubStr(rawText, pos, chunkSize)
-        SendInput("{Text}" chunk)
+    ; 放弃剪贴板粘贴, 采用 100% 兼容的逐字帧间隔发送
+    Loop parse, rawText {
+        SendInput("{Text}" A_LoopField)
         if (delayMs > 0)
             Sleep(delayMs)
-        pos += chunkSize
     }
 }
 
@@ -46,23 +30,47 @@ ReleaseModifiers() {
 ; 提交文本到游戏
 ; -------------------------------------------------------------
 SubmitText(*) {
-    global isChatActive, editBox
+    global isChatActive, g_overlayHost
     if !isChatActive
         return
 
+    ; WebView2 模式下: 触发 JS 执行 submitText() 逻辑
+    if (g_overlayHost) {
+        g_overlayHost.PostMessage('{"type":"executeSubmit"}')
+        return
+    }
+
     isChatActive := false
-    rawText := editBox.Value
-    editBox.Value := ""
+    rawText := Native_GetText()
+    Native_ClearText()
 
     HideGuiToOffscreen()
 
     gameHwnd := GetGameHwnd()
-    if gameHwnd {
+    targetHwnd := 0
+    if (gameHwnd && WinActive("ahk_id " gameHwnd)) {
+        targetHwnd := gameHwnd
+    } else {
+        global overlayInvokedWindow
+        if (overlayInvokedWindow && WinExist("ahk_id " overlayInvokedWindow)) {
+            targetHwnd := overlayInvokedWindow
+        } else if (gameHwnd && WinExist("ahk_id " gameHwnd)) {
+            targetHwnd := gameHwnd
+        }
+    }
+
+    if (targetHwnd && WinExist("ahk_id " targetHwnd)) {
+        try WinActivate("ahk_id " targetHwnd)
         if (rawText != "") {
             ReleaseModifiers()
+
+            ; 关键: 注入前关闭目标的中文 IME 候选框, 防止游戏内输入法误把 Unicode 当作拼音检索候选词
+            try IME_SET(0, "ahk_id " targetHwnd)
+            SetCapsLockSafe("Off")
+
             sanitizedText := RegExReplace(rawText, "[\r\n]+", " ")
             SendOptimizedText(sanitizedText)
-            Sleep(30)
+            Sleep(50)
             ReleaseModifiers()
             SendEvent("{Enter}")
             DisableGameIME()
@@ -75,28 +83,6 @@ SubmitText(*) {
 }
 
 ; -------------------------------------------------------------
-; 关闭悬浮窗(可选发送 Esc)
-; -------------------------------------------------------------
-CloseGui(sendEsc := false) {
-    global isChatActive, editBox
-    if !isChatActive
-        return
-    isChatActive := false
-    editBox.Value := ""
-
-    HideGuiToOffscreen()
-
-    gameHwnd := GetGameHwnd()
-    if gameHwnd {
-        if (sendEsc) {
-            ReleaseModifiers()
-            SendEvent("{Escape}")
-        }
-        DisableGameIME()
-    }
-}
-
-; -------------------------------------------------------------
 ; 滚轮/翻页转发到游戏
 ; -------------------------------------------------------------
 ForwardScrollToGame(direction) {
@@ -104,11 +90,11 @@ ForwardScrollToGame(direction) {
     if !gameHwnd
         return
 
-    global chatGui
+    guiHwnd := GetChatGuiHwnd()
     MouseGetPos &mx, &my, &mHwnd
-    if (mHwnd != chatGui.Hwnd) {
+    if (mHwnd != guiHwnd) {
         try {
-            WinGetPos(&gx, &gy, &gw, &gh, "ahk_id " chatGui.Hwnd)
+            WinGetPos(&gx, &gy, &gw, &gh, "ahk_id " guiHwnd)
             mx := gx + (gw // 2)
             my := gy + (gh // 2)
         } catch {
@@ -119,48 +105,4 @@ ForwardScrollToGame(direction) {
     wParam := (direction = "WheelUp") ? (120 << 16) : ((-120 << 16) & 0xFFFFFFFF)
 
     PostMessage(0x020A, wParam, lParam, , "ahk_id " gameHwnd)
-}
-
-; -------------------------------------------------------------
-; 位置调整
-; -------------------------------------------------------------
-AdjustGuiPos(deltaX, deltaY) {
-    global chatGui, isAdjusting, editBox
-
-    isAdjusting := true
-
-    AppConfig.OffsetX := AppConfig.OffsetX - deltaX
-    AppConfig.OffsetY := AppConfig.OffsetY - deltaY
-
-    gameHwnd := GetGameHwnd()
-    if gameHwnd {
-        try {
-            WinGetPos(&X, &Y, &W, &H, "ahk_id " gameHwnd)
-            posX := X + W - AppConfig.OffsetX
-            posY := Y + H - AppConfig.OffsetY
-            LimitGuiPos(gameHwnd, &posX, &posY)
-            ; 根据钳制后的实际位置反推 Offset,防止漂移
-            AppConfig.OffsetX := X + W - posX
-            AppConfig.OffsetY := Y + H - posY
-
-            chatGui.Move(posX, posY)
-        } catch TargetError {
-        }
-    }
-
-    editBox.Focus()
-    SetEditCaret()
-    SetTimer(OnAdjustTimeout, -200)
-}
-
-OnAdjustTimeout() {
-    global isAdjusting, chatGui
-
-    isAdjusting := false
-    AppConfig.Save()
-
-    activeHwnd := WinActive("A")
-    if (activeHwnd != chatGui.Hwnd) {
-        CloseGui(false)
-    }
 }

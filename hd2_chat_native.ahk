@@ -4,18 +4,17 @@ ListLines 0
 KeyHistory 0
 
 ; -------------------------------------------------------------
-; HD2 Chat Overlay - 主入口
+; HD2 Chat Overlay - 纯原生控件入口
 ; 版本: 1.1.0
-; 功能: 《绝地潜兵 2》中文输入悬浮窗插件 (WebView2/原生双模式)
+; 说明: 强制使用原生 AHK 控件,禁用 WebView2,用于兼容旧系统或调试
 ; -------------------------------------------------------------
 
-; 🎯 统一屏幕坐标系
 CoordMode "Mouse", "Screen"
 CoordMode "Pixel", "Screen"
 
-; -------------------------------------------------------------
-; 引用模块
-; -------------------------------------------------------------
+; 强制禁用 WebView2
+AppConfig_UseWebView2_Override := false
+
 #Include %A_ScriptDir%\lib\Config.ahk
 #Include %A_ScriptDir%\lib\Utils.ahk
 #Include %A_ScriptDir%\lib\WebView2Host.ahk
@@ -25,28 +24,19 @@ CoordMode "Pixel", "Screen"
 #Include %A_ScriptDir%\lib\Injection.ahk
 #Include %A_ScriptDir%\lib\Tray.ahk
 
-; -------------------------------------------------------------
-; 初始化
-; -------------------------------------------------------------
 EnsureSingleInstance()
-
-; 设置 DPI 感知 (必须在创建窗口前)
 SetProcessDpiAwareness()
-
 AppConfig.Load()
 
-; 检查 WebView2 是否应降级
-if (AppConfig.UseWebView2 && WebView2Host.ShouldFallback) {
-    AppConfig.UseWebView2 := false
-    AppConfig.Save()
-    WriteLog("[Main] WebView2 连续初始化失败,已自动降级到原生模式")
-}
+; 强制原生模式
+AppConfig.UseWebView2 := false
+AppConfig.Save()
 
 InitTrayMenu()
 InitChatGui()
 
 ; -------------------------------------------------------------
-; ShellHook 窗口切换监听(带防抖)
+; ShellHook 窗口切换监听
 ; -------------------------------------------------------------
 DllCall("RegisterShellHookWindow", "Ptr", A_ScriptHwnd)
 global shellMessageNum := DllCall("RegisterWindowMessage", "Str", "ShellHook")
@@ -65,9 +55,8 @@ ShellMessageCallback(wParam, lParam, *) {
 global overlayInvokedWindow := 0
 
 _ProcessShellEvent(activeHwnd) {
-    global lastActiveHwnd, isChatActive, isBoundToGame, lastShellEventTime, g_overlayHost, overlayInvokedWindow
+    global lastActiveHwnd, isChatActive, isBoundToGame, lastShellEventTime, overlayInvokedWindow
 
-    ; 防抖: 50ms 内重复事件跳过
     now := A_TickCount
     if (now - lastShellEventTime < SHELL_DEBOUNCE_MS)
         return
@@ -90,7 +79,6 @@ _ProcessShellEvent(activeHwnd) {
     activeThreadId := DllCall("GetWindowThreadProcessId", "Ptr", activeHwnd, "Ptr", 0, "UInt")
     activeOwner := guiHwnd ? DllCall("GetWindow", "Ptr", activeHwnd, "UInt", 4, "Ptr") : 0
 
-    ; 过滤 IME 子窗口与自身线程
     if (procName ~= "i)(TextInputHost|ctfmon|SogouInput|QQInput|BaiduInput)\.exe"
         || activeThreadId == guiThreadId
         || activeOwner == guiHwnd) {
@@ -118,46 +106,27 @@ _ProcessShellEvent(activeHwnd) {
 ; -------------------------------------------------------------
 ; 热键定义
 ; -------------------------------------------------------------
-
-; 游戏内且未激活聊天时: Enter 唤醒悬浮窗
 #HotIf (WinActive("ahk_exe helldivers2.exe") || AppConfig.GlobalTestMode) && !isChatActive && !isAdjusting
-
 $~$Enter::
 $~$NumpadEnter:: {
     ShowChatGui()
 }
-
 #HotIf
 
-; 悬浮窗激活时: Enter 提交, Esc 取消, 滚轮转发, 位置调整
 #HotIf isChatActive || WinActive("ahk_id " GetChatGuiHwnd())
-
 Enter:: SubmitText()
 NumpadEnter:: SubmitText()
 Escape:: CloseGui(true)
-
 WheelUp:: ForwardScrollToGame("WheelUp")
 WheelDown:: ForwardScrollToGame("WheelDown")
 PgUp:: ForwardScrollToGame("WheelUp")
 PgDn:: ForwardScrollToGame("WheelDown")
-
-^!Left:: AdjustGuiPos(-5, 0)
-^!Right:: AdjustGuiPos(5, 0)
-^!Up:: AdjustGuiPos(0, -5)
-^!Down:: AdjustGuiPos(0, 5)
-
-+Left:: AdjustGuiPos(-5, 0)
-+Right:: AdjustGuiPos(5, 0)
-+Up:: AdjustGuiPos(0, -5)
-+Down:: AdjustGuiPos(0, 5)
-
-!Left:: AdjustGuiPos(-5, 0)
-!Right:: AdjustGuiPos(5, 0)
-!Up:: AdjustGuiPos(0, -5)
-!Down:: AdjustGuiPos(0, 5)
+^!Left:: AdjustGuiPos(-10, 0)
+^!Right:: AdjustGuiPos(10, 0)
+^!Up:: AdjustGuiPos(0, -10)
+^!Down:: AdjustGuiPos(0, 10)
 #HotIf
 
-; 游戏内 F12 重载
 #HotIf WinActive("ahk_exe helldivers2.exe")
 F12:: Reload()
 #HotIf
@@ -168,8 +137,5 @@ F9:: {
     ShowChatGui()
 }
 
-; -------------------------------------------------------------
-; 启动完成
-; -------------------------------------------------------------
-WriteLog("[Main] HD2 Chat Overlay v" SCRIPT_VERSION " 启动完成,引擎: " (AppConfig.UseWebView2 ? "WebView2" : "原生"))
-TrayTip("HD2 Chat Overlay", "插件已在后台运行,按 Enter 唤醒输入框", 1)
+WriteLog("[Main] HD2 Chat Overlay v" SCRIPT_VERSION " (原生模式) 启动完成")
+TrayTip("HD2 Chat Overlay", "原生模式已启动,按 Enter 唤醒输入框", 1)

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HD2 Chat Overlay - 配置</title>
+    <link rel="stylesheet" href="config.css">
+</head>
+<body>
+    <div id="config-container">
+        <header class="config-header">
+            <h1>HD2 Chat Overlay 配置</h1>
+            <span class="version">v1.1.0</span>
+        </header>
+
+        <main class="config-main">
+            <!-- 窗口位置 -->
+            <section class="config-section">
+                <h2 class="section-title">📍 窗口位置</h2>
+                <p class="section-desc">基于游戏窗口右下角的偏移量 (像素)</p>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="offsetX">水平偏移 (OffsetX)</label>
+                        <div class="input-with-buttons">
+                            <button class="btn-adjust" data-target="offsetX" data-delta="-10">-</button>
+                            <input type="number" id="offsetX" min="0" max="9999" step="1">
+                            <button class="btn-adjust" data-target="offsetX" data-delta="10">+</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="offsetY">垂直偏移 (OffsetY)</label>
+                        <div class="input-with-buttons">
+                            <button class="btn-adjust" data-target="offsetY" data-delta="-10">-</button>
+                            <input type="number" id="offsetY" min="0" max="9999" step="1">
+                            <button class="btn-adjust" data-target="offsetY" data-delta="10">+</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 文本注入 -->
+            <section class="config-section">
+                <h2 class="section-title">⌨️ 文本注入</h2>
+                <p class="section-desc">长文本分片发送参数,影响注入速度与稳定性</p>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="chunkSize">分片大小 (字符)</label>
+                        <div class="input-with-buttons">
+                            <button class="btn-adjust" data-target="chunkSize" data-delta="-1">-</button>
+                            <input type="number" id="chunkSize" min="1" max="64" step="1">
+                            <button class="btn-adjust" data-target="chunkSize" data-delta="1">+</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="chunkDelay">分片延迟 (毫秒)</label>
+                        <div class="input-with-buttons">
+                            <button class="btn-adjust" data-target="chunkDelay" data-delta="-1">-</button>
+                            <input type="number" id="chunkDelay" min="0" max="100" step="1">
+                            <button class="btn-adjust" data-target="chunkDelay" data-delta="1">+</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 字体设置 -->
+            <section class="config-section">
+                <h2 class="section-title">🔤 悬浮窗字体</h2>
+                <p class="section-desc">字体名称与大小,实时预览效果</p>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="fontName">字体名称</label>
+                        <select id="fontName">
+                            <option value="SimHei">SimHei (黑体)</option>
+                            <option value="Microsoft YaHei UI">Microsoft YaHei UI (微软雅黑)</option>
+                            <option value="Segoe UI">Segoe UI</option>
+                            <option value="NSimSun">NSimSun (新宋体)</option>
+                            <option value="Consolas">Consolas</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="fontSize">字体大小</label>
+                        <div class="input-with-buttons">
+                            <button class="btn-adjust" data-target="fontSize" data-delta="-1">-</button>
+                            <input type="number" id="fontSize" min="10" max="32" step="1">
+                            <button class="btn-adjust" data-target="fontSize" data-delta="1">+</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 渲染引擎 -->
+            <section class="config-section">
+                <h2 class="section-title">🎨 渲染引擎</h2>
+                <p class="section-desc">WebView2 提供更好的性能和视觉效果,原生控件兼容性最佳</p>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="engine">引擎选择</label>
+                        <select id="engine">
+                            <option value="webview2">WebView2 (推荐)</option>
+                            <option value="native">原生控件 (兼容模式)</option>
+                        </select>
+                        <p class="hint">切换引擎后需要重启脚本生效</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 调试选项 -->
+            <section class="config-section">
+                <h2 class="section-title">🐛 调试</h2>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="enableDebugLog">
+                            <span class="checkbox-custom"></span>
+                            <span>启用调试日志</span>
+                        </label>
+                        <p class="hint">日志保存到 hd2_chat_debug.log,用于排查问题</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 全局测试模式 -->
+            <section class="config-section">
+                <h2 class="section-title">🧪 测试模式</h2>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="globalTestMode">
+                            <span class="checkbox-custom"></span>
+                            <span>全局测试模式</span>
+                        </label>
+                        <p class="hint">开启后,在任意窗口按 Enter 均可唤醒输入框</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="config-footer">
+            <button id="btn-save" class="btn btn-primary">💾 保存</button>
+            <button id="btn-cancel" class="btn btn-secondary">❌ 取消</button>
+            <button id="btn-reset" class="btn btn-danger">🔄 恢复默认</button>
+        </footer>
+    </div>
+
+    <script src="config.js"></script>
+</body>
+</html>
