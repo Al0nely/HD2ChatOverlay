@@ -1,0 +1,17 @@
+# 运行时生成的配置与日志
+*.log
+*.ini
+
+# 临时文件
+tmp/
+*.tmp
+*.bak
+
+# 编辑器与系统
+.vscode/
+Thumbs.db
+Desktop.ini
+
+# AHK 编译产物(如有)
+*.exe
+!Ahk2Exe.exe
