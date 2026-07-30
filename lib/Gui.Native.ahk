@@ -20,14 +20,14 @@ global TRANS_OVERLAY_GAP := 6
 GetLangTag(langName) {
     switch StrLower(Trim(langName)) {
         case "chinese", "中文", "zh": return "中"
-        case "english", "英文", "en": return "EN"
-        case "japanese", "日文", "jp": return "JP"
-        case "german", "德文", "de": return "DE"
-        case "french", "法文", "fr": return "FR"
-        case "spanish", "西文", "es": return "ES"
-        case "russian", "俄文", "ru": return "RU"
-        case "auto", "自动": return "AUTO"
-        default: return (StrLen(langName) > 0 ? StrUpper(SubStr(langName, 1, 4)) : "AUTO")
+        case "english", "英文", "en": return "英"
+        case "japanese", "日文", "jp": return "日"
+        case "german", "德文", "de": return "德"
+        case "french", "法文", "fr": return "法"
+        case "spanish", "西文", "es": return "西"
+        case "russian", "俄文", "ru": return "俄"
+        case "auto", "自动": return "自"
+        default: return (StrLen(langName) > 0 ? SubStr(langName, 1, 2) : "自")
     }
 }
 
@@ -51,11 +51,11 @@ InitNativeChatGui() {
     ; 左侧图标与前缀 (动态响应源语言配置)
     srcTag := GetLangTag(AppConfig.SourceLanguage)
     nativeChatGui.SetFont("s15 Bold cFFC800", "Microsoft YaHei")
-    nativePrefixText := nativeChatGui.AddText("x14 y11 w135 h36 +0x200", "💬 [" srcTag "]")
+    nativePrefixText := nativeChatGui.AddText("x14 y11 w125 h36 +0x200", "💬 [" srcTag "]")
 
-    ; 动态输入框 (从 x155 开始, 留出 6px 安全间隔, 彻底解决文字重叠)
+    ; 动态输入框 (从 x140 开始, 留出充裕安全间隔)
     nativeChatGui.SetFont("s16 Bold cFFFFFF", "Microsoft YaHei")
-    nativeEditBox := nativeChatGui.AddEdit("x155 y7 w470 h44 -Border -E0x0200 cFFFFFF")
+    nativeEditBox := nativeChatGui.AddEdit("x140 y7 w485 h44 -Border -E0x0200 cFFFFFF")
 
     ; 禁用 DWM 窗口过渡动画
     dwmDisableAnim := Buffer(4, 0)
@@ -86,11 +86,11 @@ InitNativeTransGui() {
     ; 前缀标签 (动态响应目标语言配置)
     targetTag := GetLangTag(AppConfig.TargetLanguage)
     nativeTransGui.SetFont("s15 Bold c4A9EFF", "Microsoft YaHei")
-    nativeTransPrefix := nativeTransGui.AddText("x14 y11 w135 h36 +0x200", "🌐 [" targetTag "]")
+    nativeTransPrefix := nativeTransGui.AddText("x14 y11 w125 h36 +0x200", "🌐 [" targetTag "]")
 
     ; 只读译文框 (与原文框同布局, +ReadOnly 防误编辑)
     nativeTransGui.SetFont("s16 Bold cFFFFFF", "Microsoft YaHei")
-    nativeTransEdit := nativeTransGui.AddEdit("x155 y7 w470 h44 -Border -E0x0200 +ReadOnly cFFFFFF")
+    nativeTransEdit := nativeTransGui.AddEdit("x140 y7 w485 h44 -Border -E0x0200 +ReadOnly cFFFFFF")
 
     ; 禁用 DWM 窗口过渡动画
     dwmDisableAnim := Buffer(4, 0)
@@ -149,9 +149,10 @@ Native_WM_LBUTTONDOWN(wParam, lParam, msg, hwnd) {
 
 Native_SetEditCaret() {
     global nativeEditBox
-    try {
-        DllCall("CreateCaret", "Ptr", nativeEditBox.Hwnd, "Ptr", 0, "Int", 2, "Int", 22)
-        DllCall("ShowCaret", "Ptr", nativeEditBox.Hwnd)
+    if (nativeEditBox) {
+        try {
+            DllCall("ShowCaret", "Ptr", nativeEditBox.Hwnd)
+        }
     }
 }
 
@@ -168,10 +169,10 @@ Native_UpdateOverlayDimensions(w, h, fontSz := 16) {
     prefixH := 36
     prefixY := (h > prefixH) ? (h - prefixH) // 2 : 0
     if (nativePrefixText)
-        nativePrefixText.Move(14, prefixY, 135, prefixH)
+        nativePrefixText.Move(14, prefixY, 125, prefixH)
 
     ; Edit 输入框垂直居中与尺寸重排
-    editX := 155
+    editX := 140
     editW := w - editX - 15
     if (editW < 100)
         editW := 100
@@ -202,9 +203,9 @@ Native_UpdateTransDimensions(w, h, fontSz := 16) {
     prefixH := 36
     prefixY := (h > prefixH) ? (h - prefixH) // 2 : 0
     if (nativeTransPrefix)
-        nativeTransPrefix.Move(14, prefixY, 135, prefixH)
+        nativeTransPrefix.Move(14, prefixY, 125, prefixH)
 
-    editX := 155
+    editX := 140
     editW := w - editX - 15
     if (editW < 100)
         editW := 100
