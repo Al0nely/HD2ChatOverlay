@@ -98,9 +98,14 @@ class OpenRouterClient {
 
         url := RegExReplace(apiBase, "/+$", "") "/chat/completions"
 
-        ; 基础 System Prompt: HD2 游戏语气 + 术语约束
+        ; 强化版的 HD2 玩家口语化 / 组队黑话人设 Prompt
         srcDesc := (sourceLang != "" && StrLower(sourceLang) != "auto") ? ("from " sourceLang " ") : ""
-        systemPrompt := "You are a fast game chat translator for Helldivers 2 (《绝地潜兵 2》). Translate the user text " srcDesc "directly into " targetLang ". Keep it brief, natural, matching game tone and slang. Use official Helldivers 2 terminology (e.g. 虫族=Terminid, 机器人=Automaton, 撤离=extract, 战术配备=stratagem). Output ONLY the translated text without quotes or explanations."
+        systemPrompt := "You are an expert real-time chat translator for Helldivers 2 (《绝地潜兵 2》). Translate the user input " srcDesc "into " targetLang ". "
+        systemPrompt .= "Style & Tone Guidelines: "
+        systemPrompt .= "1. Use casual, natural, authentic gamer slang and idioms spoken by real gamers in fast-paced multiplayer chat. Never translate word-for-word literally. "
+        systemPrompt .= "2. Keep it brief, punchy, and direct (e.g. 'Come here' -> 'On me', 'Wait for me' -> 'Hold up', 'Need ammo' -> 'Need rearm'). "
+        systemPrompt .= "3. Strictly match official Helldivers 2 terms (Bile Titan, Charger, Automaton, Stratagem, Extract, 500kg). "
+        systemPrompt .= "Output ONLY the final translated chat text without quotes or explanations."
 
         ; AC 自动机预扫描命中的当句术语动态注入
         if (glossaryHint != "")
@@ -111,7 +116,7 @@ class OpenRouterClient {
         jsonBody .= '{"role":"system","content":"' this._EscapeJsonStr(systemPrompt) '"},'
         jsonBody .= '{"role":"user","content":"' this._EscapeJsonStr(text) '"}'
         jsonBody .= '],'
-        jsonBody .= '"temperature":0.2}'
+        jsonBody .= '"temperature":0.4}'
 
         try {
             http := ComObject("WinHttp.WinHttpRequest.5.1")
