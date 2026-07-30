@@ -103,10 +103,10 @@ SwitchSourceKey=^Tab                     ; 切换注入源快捷键 (默认 Ctrl
 
 ## 运行方式
 
-1. 确保已安装 AutoHotkey v2.0+
-2. 双击运行 `hd2_chat.ahk`
-3. 启动《绝地潜兵 2》，在游戏内按 Enter 唤醒黑金悬浮框输入中文
-4. 按 Enter 发送文本；开启翻译后按 Alt+T 翻译、Ctrl+Tab 选择注入原文或译文
+1. **单文件直接运行**：从 GitHub Release 下载 `HD2ChatOverlay.exe` 双击即可使用（若在独占全屏游戏内按 Enter 无响应，右键 `.exe` ➔ 属性 ➔ 兼容性 ➔ 勾选「以管理员身份运行」）。
+2. **源码运行**：确保安装 AutoHotkey v2.0+，双击运行 `hd2_chat.ahk`。
+3. 启动《绝地潜兵 2》，在游戏内按 Enter 唤醒黑金悬浮框输入中文。
+4. 按 Enter 发送文本；开启翻译后按 Alt+T 翻译、Ctrl+Tab 选择注入原文或译文。
 
 ## 项目结构
 
