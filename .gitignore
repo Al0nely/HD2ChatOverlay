@@ -22,6 +22,8 @@ tmp/
 Thumbs.db
 Desktop.ini
 
-# AHK 编译产物(如有)
+# 规则构建与发布产物
+release/
+tools/Ahk2Exe/
 *.exe
 !Ahk2Exe.exe

@@ -27,8 +27,14 @@ class Glossary {
 
         localPath := AppConfig.GlossaryLocalPath
         if (!FileExist(localPath)) {
-            WriteLog("[Glossary] 本地词库不存在: " localPath " (将在热更新时下载)")
-            return false
+            try {
+                dir := SubStr(localPath, 1, InStr(localPath, "\", , -1) - 1)
+                if (dir != "" && !DirExist(dir))
+                    DirCreate(dir)
+                FileInstall("assets/glossary.core.json", localPath, 0)
+            } catch Error as err {
+                WriteLog("[Glossary] FileInstall 提取内置词库失败: " err.Message)
+            }
         }
 
         return this.LoadFromFile(localPath)
