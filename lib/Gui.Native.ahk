@@ -141,18 +141,8 @@ Native_WM_CTLCOLOR(wParam, lParam, msg, hwnd) {
 
 Native_WM_LBUTTONDOWN(wParam, lParam, msg, hwnd) {
     global nativeChatGui, nativeEditBox
-    if (hwnd == nativeChatGui.Hwnd) {
+    if (hwnd == nativeChatGui.Hwnd && nativeEditBox) {
         nativeEditBox.Focus()
-        Native_SetEditCaret()
-    }
-}
-
-Native_SetEditCaret() {
-    global nativeEditBox
-    if (nativeEditBox) {
-        try {
-            DllCall("ShowCaret", "Ptr", nativeEditBox.Hwnd)
-        }
     }
 }
 
@@ -277,7 +267,6 @@ Native_ShowChatGui() {
     WinActivate("ahk_id " nativeChatGui.Hwnd)
     nativeEditBox.Value := ""
     nativeEditBox.Focus()
-    Native_SetEditCaret()
     Native_SetGuiLayoutToChinese()
 
     ; 开启翻译功能时同步显示译文框 (位于原文框正上方)
