@@ -179,18 +179,40 @@ class OpenRouterClient {
     ; JSON 解码基础字符串
     ; -------------------------------------------------------------
     static _UnescapeJsonStr(str) {
-        str := StrReplace(str, '\"', '"')
-        str := StrReplace(str, '\\', '\')
-        str := StrReplace(str, '\/', '/')
-        str := StrReplace(str, '\n', '`n')
-        str := StrReplace(str, '\r', '`r')
-        str := StrReplace(str, '\t', '`t')
-        ; 处理 unicode 转义如 \u4e2d
-        while RegExMatch(str, "\\u([0-9a-fA-F]{4})", &m) {
-            char := Chr(Integer("0x" m[1]))
-            str := StrReplace(str, m[0], char)
+        out := ""
+        pos := 1
+        len := StrLen(str)
+        while (pos <= len) {
+            ch := SubStr(str, pos, 1)
+            if (ch == "\" && pos < len) {
+                nextCh := SubStr(str, pos + 1, 1)
+                switch nextCh {
+                    case '"':  out .= '"',  pos += 2
+                    case "\": out .= "\", pos += 2
+                    case "/":  out .= "/",  pos += 2
+                    case "b":  out .= "`b", pos += 2
+                    case "f":  out .= "`f", pos += 2
+                    case "n":  out .= "`n", pos += 2
+                    case "r":  out .= "`r", pos += 2
+                    case "t":  out .= "`t", pos += 2
+                    case "u":
+                        if (pos + 5 <= len && RegExMatch(str, "^\\u([0-9a-fA-F]{4})", &m, pos)) {
+                            out .= Chr(Integer("0x" m[1]))
+                            pos += 6
+                        } else {
+                            out .= "\u"
+                            pos += 2
+                        }
+                    default:
+                        out .= nextCh
+                        pos += 2
+                }
+            } else {
+                out .= ch
+                pos += 1
+            }
         }
-        return str
+        return out
     }
 
     ; -------------------------------------------------------------
