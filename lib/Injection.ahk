@@ -50,7 +50,7 @@ TranslateCurrentText(*) {
         }
     }
 
-    Native_SetPrefixText("💬 [翻译中]")
+    Native_SetPrefixText("💬 [译中]")
     Native_SetTransText("⏳ 正在请求 AI 翻译...")
     res := OpenRouterClient.TranslateText(rawText, AppConfig.TargetLanguage, AppConfig.SourceLanguage, AppConfig.ApiBase, AppConfig.ApiKey, AppConfig.Model, glossaryHint)
     Native_SetPrefixText("")

@@ -155,21 +155,32 @@ class OpenRouterClient {
     ; -------------------------------------------------------------
     static _GetUtf8Response(http) {
         try {
+            stream := ComObject("ADODB.Stream")
+            stream.Type := 1 ; adTypeBinary
+            stream.Open()
+            stream.Write(http.ResponseBody)
+            stream.Position := 0
+            stream.Type := 2 ; adTypeText
+            stream.Charset := "utf-8"
+            str := stream.ReadText()
+            stream.Close()
+            if (str != "")
+                return str
+        } catch {
+        }
+        try {
             sa := ComObjValue(http.ResponseBody)
             pData := 0
-            if (DllCall("oleaut32\SafeArrayAccessData", "Ptr", sa, "Ptr*", &pData) == 0) {
-                size := http.ResponseBody.MaxIndex() + 1
-                str := StrGet(pData, size, "UTF-8")
+            if (sa && DllCall("oleaut32\SafeArrayAccessData", "Ptr", sa, "Ptr*", &pData) == 0) {
+                ub := 0
+                DllCall("oleaut32\SafeArrayGetUBound", "Ptr", sa, "UInt", 1, "Int*", &ub)
+                str := StrGet(pData, ub + 1, "UTF-8")
                 DllCall("oleaut32\SafeArrayUnaccessData", "Ptr", sa)
                 return str
             }
         } catch {
         }
-        try {
-            return http.ResponseText
-        } catch {
-            return ""
-        }
+        return ""
     }
 
     ; -------------------------------------------------------------
