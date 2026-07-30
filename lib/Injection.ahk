@@ -50,7 +50,7 @@ TranslateCurrentText(*) {
         }
     }
 
-    Native_SetPrefixText("💬 [翻译中...]")
+    Native_SetPrefixText("💬 [翻译中]")
     res := OpenRouterClient.TranslateText(rawText, AppConfig.TargetLanguage, AppConfig.SourceLanguage, AppConfig.ApiBase, AppConfig.ApiKey, AppConfig.Model, glossaryHint)
     Native_SetPrefixText("")
 

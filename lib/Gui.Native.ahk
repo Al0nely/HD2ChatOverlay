@@ -51,11 +51,12 @@ InitNativeChatGui() {
     ; 左侧图标与前缀 (动态响应源语言配置)
     srcTag := GetLangTag(AppConfig.SourceLanguage)
     nativeChatGui.SetFont("s15 Bold cFFC800", "Microsoft YaHei")
-    nativePrefixText := nativeChatGui.AddText("x14 y11 w125 h36 +0x200", "💬 [" srcTag "]")
+    nativePrefixText := nativeChatGui.AddText("x14 y11 w135 h36 +0x200", "💬 [" srcTag "]")
 
-    ; 动态输入框 (从 x140 开始, 留出充裕安全间隔)
+    ; 动态输入框 (从 x150 开始, EM_SETMARGINS 设置 6px 内边距彻底防止光标/选框边缘渗漏)
     nativeChatGui.SetFont("s16 Bold cFFFFFF", "Microsoft YaHei")
-    nativeEditBox := nativeChatGui.AddEdit("x140 y7 w485 h44 -Border -E0x0200 cFFFFFF")
+    nativeEditBox := nativeChatGui.AddEdit("x150 y7 w475 h44 -Border -E0x0200 cFFFFFF")
+    DllCall("SendMessage", "Ptr", nativeEditBox.Hwnd, "UInt", 0x00D3, "Ptr", 3, "Ptr", (6 & 0xFFFF) | ((6 & 0xFFFF) << 16))
 
     ; 禁用 DWM 窗口过渡动画
     dwmDisableAnim := Buffer(4, 0)
@@ -86,11 +87,12 @@ InitNativeTransGui() {
     ; 前缀标签 (动态响应目标语言配置)
     targetTag := GetLangTag(AppConfig.TargetLanguage)
     nativeTransGui.SetFont("s15 Bold c4A9EFF", "Microsoft YaHei")
-    nativeTransPrefix := nativeTransGui.AddText("x14 y11 w125 h36 +0x200", "🌐 [" targetTag "]")
+    nativeTransPrefix := nativeTransGui.AddText("x14 y11 w135 h36 +0x200", "🌐 [" targetTag "]")
 
     ; 只读译文框 (与原文框同布局, +ReadOnly 防误编辑)
     nativeTransGui.SetFont("s16 Bold cFFFFFF", "Microsoft YaHei")
-    nativeTransEdit := nativeTransGui.AddEdit("x140 y7 w485 h44 -Border -E0x0200 +ReadOnly cFFFFFF")
+    nativeTransEdit := nativeTransGui.AddEdit("x150 y7 w475 h44 -Border -E0x0200 +ReadOnly cFFFFFF")
+    DllCall("SendMessage", "Ptr", nativeTransEdit.Hwnd, "UInt", 0x00D3, "Ptr", 3, "Ptr", (6 & 0xFFFF) | ((6 & 0xFFFF) << 16))
 
     ; 禁用 DWM 窗口过渡动画
     dwmDisableAnim := Buffer(4, 0)
@@ -159,10 +161,10 @@ Native_UpdateOverlayDimensions(w, h, fontSz := 16) {
     prefixH := 36
     prefixY := (h > prefixH) ? (h - prefixH) // 2 : 0
     if (nativePrefixText)
-        nativePrefixText.Move(14, prefixY, 125, prefixH)
+        nativePrefixText.Move(14, prefixY, 135, prefixH)
 
     ; Edit 输入框垂直居中与尺寸重排
-    editX := 140
+    editX := 150
     editW := w - editX - 15
     if (editW < 100)
         editW := 100
@@ -173,6 +175,7 @@ Native_UpdateOverlayDimensions(w, h, fontSz := 16) {
 
     nativeEditBox.SetFont("s" fontSz " Bold cFFFFFF", "Microsoft YaHei")
     nativeEditBox.Move(editX, editY, editW, editH)
+    DllCall("SendMessage", "Ptr", nativeEditBox.Hwnd, "UInt", 0x00D3, "Ptr", 3, "Ptr", (6 & 0xFFFF) | ((6 & 0xFFFF) << 16))
     nativeChatGui.Move(, , w, h)
 
     ; 译文框尺寸联动
@@ -193,9 +196,9 @@ Native_UpdateTransDimensions(w, h, fontSz := 16) {
     prefixH := 36
     prefixY := (h > prefixH) ? (h - prefixH) // 2 : 0
     if (nativeTransPrefix)
-        nativeTransPrefix.Move(14, prefixY, 125, prefixH)
+        nativeTransPrefix.Move(14, prefixY, 135, prefixH)
 
-    editX := 140
+    editX := 150
     editW := w - editX - 15
     if (editW < 100)
         editW := 100
@@ -206,6 +209,7 @@ Native_UpdateTransDimensions(w, h, fontSz := 16) {
 
     nativeTransEdit.SetFont("s" fontSz " Bold cFFFFFF", "Microsoft YaHei")
     nativeTransEdit.Move(editX, editY, editW, editH)
+    DllCall("SendMessage", "Ptr", nativeTransEdit.Hwnd, "UInt", 0x00D3, "Ptr", 3, "Ptr", (6 & 0xFFFF) | ((6 & 0xFFFF) << 16))
     nativeTransGui.Move(, , w, h)
 }
 
