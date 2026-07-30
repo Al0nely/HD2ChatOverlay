@@ -29,8 +29,9 @@
 
 | 按键 | 功能 |
 |------|------|
-| Enter / 小键盘 Enter | 唤醒悬浮窗 / 发送文本到游戏 (若开启自动翻译则自动翻译) |
-| Ctrl + Enter | 强制触发 AI 翻译并发送译文到游戏 |
+| Enter / 小键盘 Enter | 唤醒悬浮窗 / 将**当前选中框**文本发送到游戏 |
+| Ctrl + T | AI 翻译原文框文本，译文显示在上方译文框（原文保留） |
+| Ctrl + Tab | 在原文框 / 译文框之间切换注入源（选中框边条高亮） |
 | Esc | 取消输入并关闭悬浮窗 |
 | Ctrl + Alt + 方向键 | 微调悬浮窗位置（每次 5 像素，自动保存） |
 | Shift + 方向键 | 微调悬浮窗位置（每次 5 像素，自动保存） |
@@ -38,6 +39,8 @@
 | 鼠标滚轮 / PgUp / PgDn | 悬浮窗激活时转发滚动消息至游戏聊天记录 |
 | F12 | 重载脚本（仅游戏内生效） |
 | F9 | 诊断热键：强制显示悬浮窗（用于测试） |
+
+> 翻译与切换注入源快捷键可在配置面板或 INI `[Hotkeys]` 节自定义（AHK 语法：`^`=Ctrl `!`=Alt `+`=Shift）。
 
 ## 配置说明
 
@@ -65,19 +68,34 @@ OverlayHeight=58   ; 悬浮窗高度
 GlobalTestMode=1  ; 1=全局测试模式(任意窗口可唤醒), 0=仅游戏内
 
 [Translation]
-EnableAutoTranslate=0                    ; 1=Enter 自动翻译, 0=手动 Ctrl+Enter
+EnableAutoTranslate=0                    ; 1=开启翻译双悬浮框
 ApiBase=https://openrouter.ai/api/v1    ; OpenRouter / OpenAI 兼容接口地址
 ApiKey=sk-or-v1-xxxx                    ; 您的 API Key
-Model=google/gemini-2.5-flash           ; 默认推荐模型 (或 deepseek/deepseek-chat)
+Model=google/gemini-2.5-flash           ; 默认推荐模型 (低延迟低成本)
 TargetLanguage=English                   ; 目标翻译语言
+EnableGlossary=1                         ; 1=启用术语库 AC 自动机预扫描
+GlossaryUrl=https://raw.githubusercontent.com/helldivers-2/json/main/glossary.json
+GlossaryLocalPath=assets\glossary.core.json
+
+[Hotkeys]
+TranslateKey=^t                          ; 翻译快捷键
+SwitchSourceKey=^Tab                     ; 切换注入源快捷键
 ```
+
+## AI 翻译（双悬浮框）
+
+1. 托盘菜单打开配置面板，勾选「开启翻译双悬浮框」，填入 API Base / Key，选择模型（默认 `google/gemini-2.5-flash`）。
+2. 游戏内按 Enter 唤醒后，在下方原文框输入中文，按 `Ctrl+T` 翻译，上方淡蓝译文框显示英文（原文保留）。
+3. 按 `Ctrl+Tab` 切换注入源（选中框边条高亮：原文框绝地黄 / 译文框淡蓝），按 Enter 注入选中框内容；译文框为空时自动回退注入原文。
+4. 术语库：内置 44 条 HD2 核心黑话（虫族/机器人/撤离/战术配备等），AC 自动机预扫描当前句子并注入 Prompt 约束模型用词；配置面板「更新术语库」可从 CDN 热更新。
+5. 离线词库再生成（需 Python 3，纯标准库）：`python tools\glossary_scraper.py --out assets\glossary.core.json`
 
 ## 运行方式
 
 1. 确保已安装 AutoHotkey v2.0+
 2. 双击运行 `hd2_chat.ahk`
 3. 启动《绝地潜兵 2》，在游戏内按 Enter 唤醒黑金悬浮框输入中文
-4. 按 Enter 发送文本，或按 Ctrl+Enter 自动 AI 翻译后发送
+4. 按 Enter 发送文本；开启翻译后按 Ctrl+T 翻译、Ctrl+Tab 选择注入原文或译文
 
 ## 项目结构
 
@@ -86,6 +104,7 @@ hd2_chat.ahk               ; 主入口
 lib/
   Config.ahk               ; 配置管理与 INI 持久化
   Translation.ahk          ; OpenRouter / OpenAI AI 翻译与在线模型拉取
+  Glossary.ahk             ; HD2 术语库 AC 自动机预扫描与 CDN 热更新
   Gui.ahk                  ; 原生悬浮窗门面
   Gui.Native.ahk           ; 原生黑金悬浮窗实现
   ConfigGui.Native.ahk     ; 原生配置窗口与 Live Preview / AI 设置

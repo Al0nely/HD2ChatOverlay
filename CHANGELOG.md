@@ -1,5 +1,28 @@
 # 更新日志
 
+## [1.3.0] - 2026-07-30
+
+### 🪟 AI 翻译双悬浮框重构
+- **原文/译文双框并存**: 开启翻译后，原文框（绝地黄 `#FFC800` 边条）上方新增译文框（淡蓝 `#4A9EFF` 边条，只读），两框同宽、间距 6px，随主框一起显示/隐藏/位置微调联动。
+- **注入源选择器**: 新增 `g_injectSource` 状态机，`Ctrl+Tab` 在原文框/译文框间切换（选中框边条高亮、未选中变暗 40%），`Enter` 注入当前选中框内容；译文框为空时自动回退注入原文。
+- **翻译不替换原文**: `Ctrl+T` 触发翻译后译文显示在译文框，原文框内容保留可继续编辑，彻底取代旧版"译文直接替换原文发送"模式。
+
+### 📚 HD2 游戏黑话术语管线
+- **AC 自动机预扫描**: 新增 `lib/Glossary.ahk`，Aho-Corasick 多模式匹配（Trie + fail 指针），翻译前 O(n) 单遍扫描当前句子，命中术语动态注入 System Prompt 约束模型用词。
+- **内置核心词库**: `assets/glossary.core.json` 内置 44 条高频战场词（虫族/机器人/撤离/战术配备/武器/黑话简写等），构建 <1ms、扫描 <1ms。
+- **CDN 热更新**: 配置面板「🔄 更新术语库」从 GitHub Raw/jsDelivr 拉取版本化 `glossary.json`，比对版本号覆盖本地并重建自动机，失败自动降级核心库。
+- **免爬虫采集脚本**: `tools/glossary_scraper.py`（纯标准库）直接拉取 `helldivers-2/json` 官方拆包仓库与 `api.helldivers2.dev` Community API，可选 `--with-wiki-zh` 补充中文对照。
+
+### ⌨️ 快捷键自定义
+- 新增 INI `[Hotkeys]` 节：`TranslateKey=^t`、`SwitchSourceKey=^Tab`，配置面板提供输入框（AHK 语法），保存后 F12 重载生效。
+
+### 🔧 配置与模型
+- 默认模型统一为 `google/gemini-2.5-flash`（修复旧版 `Config.ahk` 默认值不一致），`temperature` 降至 0.2 提升术语稳定性。
+- 配置面板新增术语库区（开关/更新/状态）与快捷键区，UI 分区重排为 6 个区块。
+- 新增 `test/SyntaxCheck.ahk`（模块语法 + AC 命中自检）与 `test/LoadCheck.ahk`（全模块加载验证）。
+
+---
+
 ## [1.2.0] - 2026-07-30
 
 ### 🤖 AI 游戏实时翻译 (OpenRouter / OpenAI 格式)
