@@ -66,6 +66,10 @@ class AppConfig {
         this.GlossaryUrl := this._ReadStr("Translation", "GlossaryUrl", "https://raw.githubusercontent.com/Al0nely/HD2ChatOverlay/main/assets/glossary.core.json")
         this.GlossaryLocalPath := this._ReadStr("Translation", "GlossaryLocalPath", A_ScriptDir "\assets\glossary.core.json")
         this.TranslateKey := this._ReadStr("Hotkeys", "TranslateKey", "!t")
+        if (this.TranslateKey = "^t") {
+            this.TranslateKey := "!t"
+            try IniWrite("!t", this.iniPath, "Hotkeys", "TranslateKey")
+        }
         this.SwitchSourceKey := this._ReadStr("Hotkeys", "SwitchSourceKey", "^Tab")
     }
 
