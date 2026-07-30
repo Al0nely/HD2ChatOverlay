@@ -84,6 +84,9 @@ class OpenRouterClient {
         if (text = "")
             return { success: false, text: "", error: "输入文本为空" }
 
+        if (apiKey = "")
+            return { success: false, text: text, error: "未设置 API Key，请打开配置界面填写" }
+
         if (apiBase = "")
             apiBase := "https://openrouter.ai/api/v1"
         if (model = "")

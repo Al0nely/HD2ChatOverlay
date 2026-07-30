@@ -51,7 +51,7 @@ TranslateCurrentText(*) {
     }
 
     Native_SetPrefixText("💬 [翻译中]")
-    Native_SetTransText("...")
+    Native_SetTransText("⏳ 正在请求 AI 翻译...")
     res := OpenRouterClient.TranslateText(rawText, AppConfig.TargetLanguage, AppConfig.SourceLanguage, AppConfig.ApiBase, AppConfig.ApiKey, AppConfig.Model, glossaryHint)
     Native_SetPrefixText("")
 
@@ -61,6 +61,7 @@ TranslateCurrentText(*) {
         ; 翻译成功后默认选中译文框
         SetInjectSource("translated")
     } else {
+        Native_SetTransText("❌ " res.error)
         WriteLog("[Translation] 翻译失败: " res.error)
         TrayTip("AI 翻译失败", res.error, 2)
         ; 失败保持选中原文框
