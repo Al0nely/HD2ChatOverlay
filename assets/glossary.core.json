@@ -9,7 +9,7 @@
         "虫子",
         "虫群"
       ],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "机器人",
@@ -18,7 +18,7 @@
         "机械人",
         "铁皮"
       ],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "光能者",
@@ -26,36 +26,47 @@
       "aliases": [
         "鱿鱼"
       ],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "泰坦",
       "en": "bile titan",
       "aliases": [
         "胆汁泰坦",
-        "吐酸泰坦"
+        "吐酸泰坦",
+        "BT",
+        "大虫"
       ],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "强袭虫",
       "en": "charger",
       "aliases": [
-        "冲锋虫"
+        "冲锋虫",
+        "牛",
+        "牛牛",
+        "冲锋牛"
       ],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "猎杀者",
       "en": "hunter",
-      "aliases": [],
-      "category": "term"
+      "aliases": [
+        "跳跳虫",
+        "小跳"
+      ],
+      "category": "enemy"
     },
     {
       "zh": "潜行者",
       "en": "stalker",
-      "aliases": [],
-      "category": "term"
+      "aliases": [
+        "隐形虫",
+        "刺客"
+      ],
+      "category": "enemy"
     },
     {
       "zh": "胆汁喷吐者",
@@ -63,7 +74,7 @@
       "aliases": [
         "喷吐者"
       ],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "指挥官",
@@ -71,13 +82,13 @@
       "aliases": [
         "巢穴指挥官"
       ],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "孢子喷射虫",
       "en": "spore spewer",
       "aliases": [],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "尖啸者",
@@ -85,13 +96,16 @@
       "aliases": [
         "飞虫"
       ],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "穿刺者",
       "en": "impaler",
-      "aliases": [],
-      "category": "term"
+      "aliases": [
+        "地刺",
+        "触手虫"
+      ],
+      "category": "enemy"
     },
     {
       "zh": "战士虫",
@@ -99,7 +113,7 @@
       "aliases": [
         "战士"
       ],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "清道夫",
@@ -107,13 +121,13 @@
       "aliases": [
         "小虫"
       ],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "幼年泰坦",
       "en": "nursery titan",
       "aliases": [],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "阿尔法指挥官",
@@ -121,21 +135,23 @@
       "aliases": [
         "红指挥官"
       ],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "巨型者",
       "en": "hulk",
       "aliases": [
-        "浩克"
+        "浩克",
+        "喷火哥",
+        "火箭哥"
       ],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "蹂躏者",
       "en": "devastator",
       "aliases": [],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "重型蹂躏者",
@@ -144,7 +160,7 @@
         "盾牌兵",
         "大盾哥"
       ],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "火箭蹂躏者",
@@ -152,13 +168,13 @@
       "aliases": [
         "火箭哥"
       ],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "狂暴者",
       "en": "berserker",
       "aliases": [],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "坦克",
@@ -166,7 +182,7 @@
       "aliases": [
         "歼灭者坦克"
       ],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "粉碎者坦克",
@@ -174,27 +190,30 @@
       "aliases": [
         "机关炮坦克"
       ],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "火箭坦克",
       "en": "rocket tank",
       "aliases": [],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "炮艇",
       "en": "gunship",
       "aliases": [],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "工厂步行者",
       "en": "factory strider",
       "aliases": [
-        "移动工厂"
+        "移动工厂",
+        "FS",
+        "大狗",
+        "AT-AT"
       ],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "步兵",
@@ -202,7 +221,7 @@
       "aliases": [
         "小机器人"
       ],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "侦察步行者",
@@ -211,27 +230,25 @@
         "鸡腿人",
         "双足机器人"
       ],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "喷火浩克",
       "en": "scorcher hulk",
-      "aliases": [
-        "喷火哥"
-      ],
-      "category": "term"
+      "aliases": [],
+      "category": "enemy"
     },
     {
       "zh": "火箭浩克",
       "en": "rocket hulk",
       "aliases": [],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "战争步行者",
       "en": "war strider",
       "aliases": [],
-      "category": "term"
+      "category": "enemy"
     },
     {
       "zh": "飞鹰空袭",
@@ -239,7 +256,7 @@
       "aliases": [
         "空袭"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "飞鹰集束炸弹",
@@ -247,7 +264,7 @@
       "aliases": [
         "集束弹"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "飞鹰凝固汽油空袭",
@@ -255,16 +272,19 @@
       "aliases": [
         "汽油弹"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "飞鹰500KG炸弹",
       "en": "eagle 500kg bomb",
       "aliases": [
         "500KG",
-        "500K"
+        "500K",
+        "500",
+        "下头500",
+        "大红线"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "飞鹰110MM火箭巢",
@@ -273,7 +293,7 @@
         "110",
         "110火箭"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "飞鹰扫射",
@@ -281,7 +301,7 @@
       "aliases": [
         "扫射"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "飞鹰烟雾打击",
@@ -289,7 +309,7 @@
       "aliases": [
         "烟雾弹"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "轨道炮",
@@ -297,7 +317,7 @@
       "aliases": [
         "轨道打击"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "轨道精准打击",
@@ -305,7 +325,7 @@
       "aliases": [
         "OPS"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "轨道毒气打击",
@@ -313,7 +333,7 @@
       "aliases": [
         "毒气"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "轨道380MM高爆弹幕",
@@ -321,7 +341,7 @@
       "aliases": [
         "380"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "轨道120MM高爆弹幕",
@@ -329,7 +349,7 @@
       "aliases": [
         "120"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "轨道激光",
@@ -337,7 +357,7 @@
       "aliases": [
         "激光"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "轨道移动弹幕",
@@ -345,7 +365,7 @@
       "aliases": [
         "移动弹幕"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "轨道空爆打击",
@@ -353,7 +373,7 @@
       "aliases": [
         "空爆"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "轨道加特林弹幕",
@@ -361,21 +381,22 @@
       "aliases": [
         "加特林打击"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "无后坐力步枪",
       "en": "recoilless rifle",
       "aliases": [
-        "无后座"
+        "无后座",
+        "RR"
       ],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "磁轨炮",
       "en": "railgun",
       "aliases": [],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "电弧发射器",
@@ -383,7 +404,7 @@
       "aliases": [
         "电弧"
       ],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "火焰喷射器",
@@ -391,7 +412,7 @@
       "aliases": [
         "喷火器"
       ],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "机枪",
@@ -399,7 +420,7 @@
       "aliases": [
         "MG"
       ],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "重型机枪",
@@ -407,27 +428,31 @@
       "aliases": [
         "HMG"
       ],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "机炮",
       "en": "autocannon",
-      "aliases": [],
-      "category": "term"
+      "aliases": [
+        "AC"
+      ],
+      "category": "weapon"
     },
     {
       "zh": "飞矛",
       "en": "spear",
       "aliases": [],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "类星体加农炮",
       "en": "quasar cannon",
       "aliases": [
-        "类星体"
+        "类星体",
+        "QC",
+        "无限火箭筒"
       ],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "反器材步枪",
@@ -436,7 +461,7 @@
         "AMR",
         "狙击枪"
       ],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "榴弹发射器",
@@ -444,7 +469,7 @@
       "aliases": [
         "榴弹"
       ],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "司令官火箭筒",
@@ -453,7 +478,7 @@
         "司令官",
         "四联装"
       ],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "空爆火箭发射器",
@@ -461,21 +486,23 @@
       "aliases": [
         "空爆火箭"
       ],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "激光炮",
       "en": "laser cannon",
       "aliases": [],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "护盾生成器背包",
       "en": "shield generator pack",
       "aliases": [
-        "护盾包"
+        "护盾包",
+        "泡泡盾",
+        "蛋壳"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "补给背包",
@@ -483,7 +510,7 @@
       "aliases": [
         "补给包"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "喷射背包",
@@ -491,7 +518,7 @@
       "aliases": [
         "跳包"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "护卫犬",
@@ -499,15 +526,16 @@
       "aliases": [
         "狗"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "护卫犬漫游者",
       "en": "guard dog rover",
       "aliases": [
-        "激光狗"
+        "激光狗",
+        "切队友狗"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "防弹盾牌背包",
@@ -515,7 +543,7 @@
       "aliases": [
         "防弹盾"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "加特林哨戒炮",
@@ -523,13 +551,13 @@
       "aliases": [
         "哨戒炮"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "机枪哨戒炮",
       "en": "machine gun sentry",
       "aliases": [],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "迫击炮哨戒炮",
@@ -537,7 +565,7 @@
       "aliases": [
         "迫击炮"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "电磁迫击炮哨戒炮",
@@ -545,7 +573,7 @@
       "aliases": [
         "电磁迫击炮"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "机炮哨戒炮",
@@ -553,7 +581,7 @@
       "aliases": [
         "机炮塔"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "火箭哨戒炮",
@@ -561,7 +589,7 @@
       "aliases": [
         "火箭塔"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "特斯拉电塔",
@@ -569,7 +597,7 @@
       "aliases": [
         "电塔"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "护盾生成器中继器",
@@ -578,7 +606,7 @@
         "大护盾",
         "护盾罩"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "杀伤人员地雷",
@@ -586,7 +614,7 @@
       "aliases": [
         "地雷"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "燃烧地雷",
@@ -594,13 +622,13 @@
       "aliases": [
         "火雷"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "反坦克地雷",
       "en": "anti-tank mines",
       "aliases": [],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "重型机枪阵地",
@@ -608,7 +636,7 @@
       "aliases": [
         "固定机枪"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "爱国者外骨骼机甲",
@@ -617,7 +645,7 @@
         "机甲",
         "高达"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "解放者外骨骼机甲",
@@ -625,19 +653,19 @@
       "aliases": [
         "双机炮机甲"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "破裂者",
       "en": "breaker",
       "aliases": [],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "惩罚者",
       "en": "punisher",
       "aliases": [],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "独头弹惩罚者",
@@ -645,19 +673,19 @@
       "aliases": [
         "独头弹"
       ],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "镰刀",
       "en": "sickle",
       "aliases": [],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "焦土",
       "en": "scorcher",
       "aliases": [],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "主宰",
@@ -665,7 +693,7 @@
       "aliases": [
         "JAR-5主宰"
       ],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "救赎者手枪",
@@ -673,7 +701,7 @@
       "aliases": [
         "救赎者"
       ],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "参议员左轮",
@@ -682,7 +710,7 @@
         "参议员",
         "左轮"
       ],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "冲击手雷",
@@ -690,7 +718,7 @@
       "aliases": [
         "冲击弹"
       ],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "眩晕手雷",
@@ -698,7 +726,7 @@
       "aliases": [
         "眩晕弹"
       ],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "铝热手雷",
@@ -706,7 +734,7 @@
       "aliases": [
         "铝热弹"
       ],
-      "category": "term"
+      "category": "weapon"
     },
     {
       "zh": "地狱火炸弹",
@@ -714,13 +742,13 @@
       "aliases": [
         "地狱火"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "雷达站",
       "en": "radar station",
       "aliases": [],
-      "category": "term"
+      "category": "slang"
     },
     {
       "zh": "干扰塔",
@@ -728,7 +756,7 @@
       "aliases": [
         "干扰站"
       ],
-      "category": "term"
+      "category": "slang"
     },
     {
       "zh": "检测塔",
@@ -736,7 +764,7 @@
       "aliases": [
         "眼睛塔"
       ],
-      "category": "term"
+      "category": "slang"
     },
     {
       "zh": "炮艇工厂",
@@ -744,7 +772,7 @@
       "aliases": [
         "炮艇基地"
       ],
-      "category": "term"
+      "category": "slang"
     },
     {
       "zh": "战术炮台",
@@ -752,7 +780,7 @@
       "aliases": [
         "SEAF炮台"
       ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "防空导弹阵地",
@@ -760,7 +788,7 @@
       "aliases": [
         "SAM阵地"
       ],
-      "category": "term"
+      "category": "slang"
     },
     {
       "zh": "防空炮",
@@ -768,7 +796,7 @@
       "aliases": [
         "AA炮"
       ],
-      "category": "term"
+      "category": "slang"
     },
     {
       "zh": "尖啸者巢穴",
@@ -776,7 +804,7 @@
       "aliases": [
         "飞虫巢"
       ],
-      "category": "term"
+      "category": "slang"
     },
     {
       "zh": "虫巢",
@@ -784,13 +812,13 @@
       "aliases": [
         "虫穴"
       ],
-      "category": "term"
+      "category": "slang"
     },
     {
       "zh": "虫巢爆发",
       "en": "bug breach",
       "aliases": [],
-      "category": "term"
+      "category": "slang"
     },
     {
       "zh": "撤离点",
@@ -798,7 +826,36 @@
       "aliases": [
         "撤离区"
       ],
-      "category": "term"
+      "category": "slang"
+    },
+    {
+      "zh": "我的问题",
+      "en": "my bad",
+      "aliases": [
+        "我的",
+        "怪我",
+        "mb"
+      ],
+      "category": "slang"
+    },
+    {
+      "zh": "队友误伤",
+      "en": "friendly fire",
+      "aliases": [
+        "痛击队友",
+        "FF",
+        "tk"
+      ],
+      "category": "slang"
+    },
+    {
+      "zh": "准备好了",
+      "en": "ready",
+      "aliases": [
+        "r",
+        "rdy"
+      ],
+      "category": "slang"
     },
     {
       "zh": "绝地潜兵",
@@ -806,19 +863,19 @@
       "aliases": [
         "潜兵"
       ],
-      "category": "term"
+      "category": "slang"
     },
     {
       "zh": "超级地球",
       "en": "super earth",
       "aliases": [],
-      "category": "term"
+      "category": "slang"
     },
     {
       "zh": "管理式民主",
       "en": "managed democracy",
       "aliases": [],
-      "category": "term"
+      "category": "slang"
     },
     {
       "zh": "样本",
@@ -826,7 +883,7 @@
       "aliases": [
         "标本"
       ],
-      "category": "term"
+      "category": "resource"
     },
     {
       "zh": "普通样本",
@@ -835,7 +892,7 @@
         "绿色样本",
         "绿样"
       ],
-      "category": "term"
+      "category": "resource"
     },
     {
       "zh": "稀有样本",
@@ -844,16 +901,18 @@
         "橙色样本",
         "橙样"
       ],
-      "category": "term"
+      "category": "resource"
     },
     {
       "zh": "超级样本",
       "en": "super sample",
       "aliases": [
         "粉色样本",
-        "粉样"
+        "粉样",
+        "粉桶",
+        "鸡腿石"
       ],
-      "category": "term"
+      "category": "resource"
     },
     {
       "zh": "申购单",
@@ -861,7 +920,7 @@
       "aliases": [
         "R点"
       ],
-      "category": "term"
+      "category": "resource"
     },
     {
       "zh": "奖章",
@@ -869,7 +928,7 @@
       "aliases": [
         "勋章"
       ],
-      "category": "term"
+      "category": "resource"
     },
     {
       "zh": "超级货币",
@@ -877,7 +936,7 @@
       "aliases": [
         "SC"
       ],
-      "category": "term"
+      "category": "resource"
     },
     {
       "zh": "难度9",
@@ -886,7 +945,7 @@
         "地狱潜兵难度",
         "N9"
       ],
-      "category": "term"
+      "category": "resource"
     },
     {
       "zh": "战术配备",
@@ -894,16 +953,7 @@
       "aliases": [
         "战略配备"
       ],
-      "category": "term"
-    },
-    {
-      "zh": "队友伤害",
-      "en": "friendly fire",
-      "aliases": [
-        "友军伤害",
-        "FF"
-      ],
-      "category": "term"
+      "category": "stratagem"
     },
     {
       "zh": "次要目标",
@@ -912,7 +962,7 @@
         "副任务",
         "支线"
       ],
-      "category": "term"
+      "category": "slang"
     },
     {
       "zh": "主要目标",
@@ -921,7 +971,7 @@
         "主任务",
         "主线"
       ],
-      "category": "term"
+      "category": "slang"
     },
     {
       "zh": "撤离",
@@ -935,7 +985,11 @@
       "zh": "增援",
       "en": "reinforce",
       "aliases": [
-        "复活"
+        "复活",
+        "拉我",
+        "叫我",
+        "扔我",
+        "re"
       ],
       "category": "action"
     },
