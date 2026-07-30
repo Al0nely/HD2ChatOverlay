@@ -1,4 +1,4 @@
-; lib/Gui.Native.ahk - 原生 AHK 控件悬浮窗 (降级兼容模式)
+; lib/Gui.Native.ahk - 原生 AHK 悬浮窗实现
 
 global nativeChatGui := ""
 global nativeEditBox := ""
