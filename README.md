@@ -88,7 +88,12 @@ SwitchSourceKey=^Tab                     ; 切换注入源快捷键
 2. 游戏内按 Enter 唤醒后，在下方原文框输入中文，按 `Ctrl+T` 翻译，上方淡蓝译文框显示英文（原文保留）。
 3. 按 `Ctrl+Tab` 切换注入源（选中框边条高亮：原文框绝地黄 / 译文框淡蓝），按 Enter 注入选中框内容；译文框为空时自动回退注入原文。
 4. 术语库：内置 44 条 HD2 核心黑话（虫族/机器人/撤离/战术配备等），AC 自动机预扫描当前句子并注入 Prompt 约束模型用词；配置面板「更新术语库」可从 CDN 热更新。
-5. 离线词库再生成（需 Python 3，纯标准库）：`python tools\glossary_scraper.py --out assets\glossary.core.json`
+5. 离线词库再生成（使用 Conda 隔离环境，避免污染主环境）：
+   ```bash
+   conda create -n hd2chat python=3.11 -y
+   conda activate hd2chat
+   python tools/glossary_scraper.py --out assets/glossary.core.json
+   ```
 
 ## 运行方式
 

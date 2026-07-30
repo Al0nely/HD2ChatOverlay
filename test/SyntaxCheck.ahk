@@ -77,7 +77,16 @@ try {
     errors.Push("FormatForPrompt 异常: " err.Message)
 }
 
-; --- 5. Translation JSON 转义 ---
+; --- 5. Glossary.CheckUpdate 测试 ---
+try {
+    upRes := Glossary.CheckUpdate()
+    if (!upRes.success)
+        errors.Push("Glossary.CheckUpdate 失败: " upRes.error)
+} catch Error as err {
+    errors.Push("Glossary.CheckUpdate 异常: " err.Message)
+}
+
+; --- 6. Translation JSON 转义 ---
 try {
     esc := OpenRouterClient._EscapeJsonStr('测试"引号"与\反斜杠')
     if (!InStr(esc, '\"'))

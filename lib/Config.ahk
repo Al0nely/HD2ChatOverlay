@@ -34,7 +34,8 @@ class AppConfig {
 
     ; 术语库配置 ([Translation] 节)
     static EnableGlossary := true
-    static GlossaryUrl := "https://raw.githubusercontent.com/helldivers-2/json/main/glossary.json"
+    static EnablePythonScraper := true
+    static GlossaryUrl := "https://raw.githubusercontent.com/Al0nely/HD2ChatOverlay/main/assets/glossary.core.json"
     static GlossaryLocalPath := A_ScriptDir "\assets\glossary.core.json"
 
     ; 快捷键配置 ([Hotkeys] 节, AHK 热键语法: ^=Ctrl !=Alt +=Shift)
@@ -59,7 +60,8 @@ class AppConfig {
         this.Model := this._ReadStr("Translation", "Model", "google/gemini-2.5-flash")
         this.TargetLanguage := this._ReadStr("Translation", "TargetLanguage", "English")
         this.EnableGlossary := this._ReadBool("Translation", "EnableGlossary", true)
-        this.GlossaryUrl := this._ReadStr("Translation", "GlossaryUrl", "https://raw.githubusercontent.com/helldivers-2/json/main/glossary.json")
+        this.EnablePythonScraper := this._ReadBool("Translation", "EnablePythonScraper", true)
+        this.GlossaryUrl := this._ReadStr("Translation", "GlossaryUrl", "https://raw.githubusercontent.com/Al0nely/HD2ChatOverlay/main/assets/glossary.core.json")
         this.GlossaryLocalPath := this._ReadStr("Translation", "GlossaryLocalPath", A_ScriptDir "\assets\glossary.core.json")
         this.TranslateKey := this._ReadStr("Hotkeys", "TranslateKey", "^t")
         this.SwitchSourceKey := this._ReadStr("Hotkeys", "SwitchSourceKey", "^Tab")
@@ -86,6 +88,7 @@ class AppConfig {
             IniWrite(this.Model, this.iniPath, "Translation", "Model")
             IniWrite(this.TargetLanguage, this.iniPath, "Translation", "TargetLanguage")
             IniWrite(this.EnableGlossary ? "1" : "0", this.iniPath, "Translation", "EnableGlossary")
+            IniWrite(this.EnablePythonScraper ? "1" : "0", this.iniPath, "Translation", "EnablePythonScraper")
             IniWrite(this.GlossaryUrl, this.iniPath, "Translation", "GlossaryUrl")
             IniWrite(this.GlossaryLocalPath, this.iniPath, "Translation", "GlossaryLocalPath")
             IniWrite(this.TranslateKey, this.iniPath, "Hotkeys", "TranslateKey")
@@ -113,7 +116,8 @@ class AppConfig {
         this.Model := "google/gemini-2.5-flash"
         this.TargetLanguage := "English"
         this.EnableGlossary := true
-        this.GlossaryUrl := "https://raw.githubusercontent.com/helldivers-2/json/main/glossary.json"
+        this.EnablePythonScraper := true
+        this.GlossaryUrl := "https://raw.githubusercontent.com/Al0nely/HD2ChatOverlay/main/assets/glossary.core.json"
         this.GlossaryLocalPath := A_ScriptDir "\assets\glossary.core.json"
         this.TranslateKey := "^t"
         this.SwitchSourceKey := "^Tab"

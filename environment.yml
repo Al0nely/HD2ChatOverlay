@@ -1,0 +1,5 @@
+name: hd2chat
+channels:
+  - defaults
+dependencies:
+  - python=3.11

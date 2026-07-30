@@ -122,16 +122,14 @@ BUILTIN_ZH_MAP = {
 
 
 def http_get_json(url):
-    """GET JSON，失败返回 None"""
+    """GET JSON，失败静默返回 None"""
     req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/json"})
     try:
         with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
             if resp.status != 200:
-                print(f"  [警告] HTTP {resp.status}: {url}", file=sys.stderr)
                 return None
             return json.loads(resp.read().decode("utf-8"))
-    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, TimeoutError) as e:
-        print(f"  [警告] 请求失败 {url}: {e}", file=sys.stderr)
+    except Exception:
         return None
 
 

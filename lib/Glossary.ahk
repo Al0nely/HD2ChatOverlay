@@ -65,40 +65,101 @@ class Glossary {
     }
 
     ; -------------------------------------------------------------
-    ; 热更新：从 CDN 下载 glossary.json, 比对版本后覆盖本地并重建
+    ; -------------------------------------------------------------
+    ; 热更新：从 CDN/URL 下载 glossary.json, 比对版本后覆盖本地并重建；
+    ; 若远端下载失败（404/网络故障），自动降级触发本地 Python 刷新或重新载入本地核心词库。
     ; 返回 { success, updated, version, error }
     ; -------------------------------------------------------------
     static CheckUpdate() {
-        url := AppConfig.GlossaryUrl
-        if (url = "")
-            return { success: false, updated: false, version: this.version, error: "GlossaryUrl 为空" }
+        urls := []
+        if (AppConfig.GlossaryUrl != "")
+            urls.Push(AppConfig.GlossaryUrl)
 
+        ; 远端候选 URL 列表 (防止默认单点 404 导致功能不可用)
+        candidateUrls := [
+            "https://raw.githubusercontent.com/Al0nely/HD2ChatOverlay/main/assets/glossary.core.json",
+            "https://cdn.jsdelivr.net/gh/Al0nely/HD2ChatOverlay@main/assets/glossary.core.json"
+        ]
+        for _, cUrl in candidateUrls {
+            if (cUrl != AppConfig.GlossaryUrl)
+                urls.Push(cUrl)
+        }
+
+        lastErr := ""
+        failedUrl := AppConfig.GlossaryUrl != "" ? AppConfig.GlossaryUrl : (urls.Length > 0 ? urls[1] : "")
+        localPath := AppConfig.GlossaryLocalPath
+
+        for _, url in urls {
+            res := this._TryDownloadUrl(url, localPath)
+            if (res.success)
+                return res
+            failedUrl := url
+            lastErr := res.error
+        }
+
+        WriteLog("[Glossary] 远端下载失败 (" failedUrl " -> " lastErr ")，尝试本地数据源刷新/恢复...")
+
+        ; 降级策略 1: 尝试运行本地 Python 采集脚本刷新/生成词库 (仅在 AppConfig.EnablePythonScraper 为 true 时运行)
+        scraperScript := A_ScriptDir "\tools\glossary_scraper.py"
+        if (AppConfig.EnablePythonScraper && FileExist(scraperScript)) {
+            SplitPath(localPath, , &dir)
+            if (dir && !DirExist(dir))
+                DirCreate(dir)
+
+            pythonCmd := "python"
+            condaEnvExe := "E:\Tools\Miniconda\envs\hd2chat\python.exe"
+            if FileExist(condaEnvExe)
+                pythonCmd := '"' condaEnvExe '"'
+            else
+                pythonCmd := 'conda run -n hd2chat python'
+
+            cmd := pythonCmd ' "' scraperScript '" --out "' localPath '"'
+            exitCode := RunWait(cmd, A_ScriptDir, "Hide")
+            if (exitCode = 0 && FileExist(localPath)) {
+                if this.LoadFromFile(localPath) {
+                    WriteLog("[Glossary] 本地采集器生成/刷新词库成功: " this.terms.Length " 词, 版本 " this.version)
+                    return { success: true, updated: true, remote: false, failedUrl: failedUrl, version: this.version " (本地刷新)", error: lastErr }
+                }
+            }
+        }
+
+        ; 降级策略 2: 若本地已有词库文件，重新载入
+        if FileExist(localPath) {
+            if this.LoadFromFile(localPath) {
+                WriteLog("[Glossary] 已载入本地现有词库: " this.terms.Length " 词, 版本 " this.version)
+                return { success: true, updated: false, remote: false, failedUrl: failedUrl, version: this.version " (本地现有)", error: lastErr }
+            }
+        }
+
+        return { success: false, updated: false, remote: false, failedUrl: failedUrl, version: this.version, error: lastErr }
+    }
+
+    static _TryDownloadUrl(url, localPath) {
         try {
             http := ComObject("WinHttp.WinHttpRequest.5.1")
             http.Open("GET", url, true)
             http.SetRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) HD2ChatOverlay/1.3.0")
             http.Send()
             if !http.WaitForResponse(8) {
-                return { success: false, updated: false, version: this.version, error: "下载超时 (8s)" }
+                return { success: false, updated: false, remote: false, version: this.version, error: "下载超时 (8s)" }
             }
             if (http.Status != 200) {
-                return { success: false, updated: false, version: this.version, error: "HTTP " http.Status }
+                return { success: false, updated: false, remote: false, version: this.version, error: "HTTP " http.Status }
             }
 
             remoteText := http.ResponseText
             parsed := this._ParseGlossaryJson(remoteText)
             if (parsed.terms.Length = 0) {
-                return { success: false, updated: false, version: this.version, error: "远端词库格式错误" }
+                return { success: false, updated: false, remote: false, version: this.version, error: "远端词库格式错误" }
             }
 
             ; 版本相同则跳过
             if (parsed.version = this.version && this.isLoaded) {
                 WriteLog("[Glossary] 词库已是最新版本: " this.version)
-                return { success: true, updated: false, version: this.version, error: "" }
+                return { success: true, updated: false, remote: true, version: this.version, error: "" }
             }
 
             ; 确保目录存在并覆盖本地文件
-            localPath := AppConfig.GlossaryLocalPath
             SplitPath(localPath, , &dir)
             if (dir && !DirExist(dir))
                 DirCreate(dir)
@@ -108,7 +169,7 @@ class Glossary {
                     FileDelete(localPath)
                 FileAppend(remoteText, localPath, "UTF-8")
             } catch Error as err {
-                return { success: false, updated: false, version: this.version, error: "写入本地失败: " err.Message }
+                return { success: false, updated: false, remote: false, version: this.version, error: "写入本地失败: " err.Message }
             }
 
             ; 重建自动机
@@ -118,9 +179,9 @@ class Glossary {
             this.isLoaded := true
 
             WriteLog("[Glossary] 词库热更新成功: " this.terms.Length " 词, 新版本 " this.version)
-            return { success: true, updated: true, version: this.version, error: "" }
+            return { success: true, updated: true, remote: true, version: this.version, error: "" }
         } catch Error as err {
-            return { success: false, updated: false, version: this.version, error: "网络异常: " err.Message }
+            return { success: false, updated: false, remote: false, version: this.version, error: "网络异常: " err.Message }
         }
     }
 

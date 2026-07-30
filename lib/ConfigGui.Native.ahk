@@ -14,6 +14,7 @@ global g_cfgCbbModel := ""
 global g_cfgDdlTargetLang := ""
 global g_cfgTxtApiStatus := ""
 global g_cfgChkGlossary := ""
+global g_cfgChkEnablePythonScraper := ""
 global g_cfgTxtGlossaryStatus := ""
 global g_cfgEditTranslateKey := ""
 global g_cfgEditSwitchKey := ""
@@ -22,7 +23,7 @@ Native_ShowConfigGui() {
     global nativeConfigGui, isChatActive, nativeIsChatActive, nativeEditBox
     global g_cfgEditOffsetX, g_cfgEditOffsetY, g_cfgEditWidth, g_cfgEditHeight, g_cfgEditFontSize, g_cfgEditChunkDelay, g_cfgChkDebugLog
     global g_cfgChkAutoTranslate, g_cfgEditApiBase, g_cfgEditApiKey, g_cfgCbbModel, g_cfgDdlTargetLang, g_cfgTxtApiStatus
-    global g_cfgChkGlossary, g_cfgTxtGlossaryStatus, g_cfgEditTranslateKey, g_cfgEditSwitchKey
+    global g_cfgChkGlossary, g_cfgChkEnablePythonScraper, g_cfgTxtGlossaryStatus, g_cfgEditTranslateKey, g_cfgEditSwitchKey
 
     ; 先将激活状态归零，确保 Native_ShowChatGui() 能正常弹窗展示
     isChatActive := false
@@ -141,6 +142,8 @@ Native_ShowConfigGui() {
 
     g_cfgChkGlossary := nativeConfigGui.AddCheckbox("xm+15 w280 Checked" (AppConfig.EnableGlossary ? 1 : 0), "启用术语注入 (AC 自动机预扫描)")
     btnUpdateGlossary := nativeConfigGui.AddButton("x+10 w150 h26", "🔄 更新术语库")
+
+    g_cfgChkEnablePythonScraper := nativeConfigGui.AddCheckbox("xm+15 w440 Checked" (AppConfig.EnablePythonScraper ? 1 : 0), "允许远端失败时自动调用本地 Python (Conda) 刷新/采集")
 
     g_cfgTxtGlossaryStatus := nativeConfigGui.AddText("xm+15 w440 +0x200 cAAAAAA", Glossary.isLoaded ? ("词库: " Glossary.terms.Length " 词, 版本 " Glossary.version) : "词库未加载 (将使用内置核心库)")
 
@@ -276,7 +279,7 @@ _Native_UpdateGlossary(btnObj, *) {
     btnObj.Enabled := false
     btnObj.Text := "⏳ 更新中..."
     g_cfgTxtGlossaryStatus.SetFont("cFFC800")
-    g_cfgTxtGlossaryStatus.Value := "⏳ 正在从 CDN 拉取最新术语库..."
+    g_cfgTxtGlossaryStatus.Value := "⏳ 正在拉取/更新术语库..."
     Sleep(10)
 
     res := Glossary.CheckUpdate()
@@ -286,15 +289,41 @@ _Native_UpdateGlossary(btnObj, *) {
 
     nativeConfigGui.Opt("+OwnDialogs")
 
+    failedUrl := res.HasOwnProp("failedUrl") ? res.failedUrl : AppConfig.GlossaryUrl
+    errMsg := (res.error != "") ? res.error : "HTTP 404 / 无法连接"
+
     if (res.success) {
-        g_cfgTxtGlossaryStatus.SetFont("c00FF00")
-        g_cfgTxtGlossaryStatus.Value := (res.updated ? "✅ 已更新到 " : "✅ 已是最新 ") "版本 " res.version " (" Glossary.terms.Length " 词)"
-        if (res.updated)
-            MsgBox("✅ 术语库更新成功！`n`n新版本: " res.version "`n词条数: " Glossary.terms.Length, "HD2 Chat Overlay", "Iconi")
+        if (res.HasOwnProp("remote") && res.remote) {
+            ; 远端成功获取
+            g_cfgTxtGlossaryStatus.SetFont("c00FF00")
+            g_cfgTxtGlossaryStatus.Value := (res.updated ? "✅ 已更新到 " : "✅ 已是最新 ") "版本 " res.version " (" Glossary.terms.Length " 词)"
+            if (res.updated)
+                MsgBox("✅ 术语库更新成功！`n`n新版本: " res.version "`n词条数: " Glossary.terms.Length, "HD2 Chat Overlay", "Iconi")
+        } else {
+            ; 远端无法获取，但已自动降级载入本地词库/本地刷新
+            g_cfgTxtGlossaryStatus.SetFont("cFFC800")
+            g_cfgTxtGlossaryStatus.Value := "⚠️ 远端无法获取 (" errMsg ")，已载入本地词库 (" Glossary.terms.Length " 词)"
+            
+            detailText := "⚠️ 无法从远端获取术语库`n`n"
+            if (failedUrl != "")
+                detailText .= "请求的目标远端: " failedUrl "`n"
+            detailText .= "失败原因: " errMsg "`n`n"
+            detailText .= "已自动降级并载入本地术语库。`n`n"
+            detailText .= "当前版本: " res.version "`n"
+            detailText .= "词条数量: " Glossary.terms.Length " 词"
+
+            MsgBox(detailText, "HD2 Chat Overlay", "Icon!")
+        }
     } else {
         g_cfgTxtGlossaryStatus.SetFont("cFF5555")
-        g_cfgTxtGlossaryStatus.Value := "❌ 更新失败: " res.error " (保留现有词库)"
-        MsgBox("❌ 术语库更新失败:`n" res.error "`n`n将继续使用现有词库。", "HD2 Chat Overlay", "Icon!")
+        g_cfgTxtGlossaryStatus.Value := "❌ 远端与本地均无法获取: " errMsg
+        
+        detailText := "❌ 术语库更新失败:`n`n"
+        if (failedUrl != "")
+            detailText .= "请求的目标远端: " failedUrl "`n"
+        detailText .= "失败原因: " errMsg "`n`n将继续使用现有词库。"
+        
+        MsgBox(detailText, "HD2 Chat Overlay", "Icon!")
     }
 }
 
@@ -322,7 +351,7 @@ _Native_UpdatePreview() {
 _Native_SaveConfig(*) {
     global nativeConfigGui, g_cfgEditOffsetX, g_cfgEditOffsetY, g_cfgEditWidth, g_cfgEditHeight, g_cfgEditFontSize, g_cfgEditChunkDelay, g_cfgChkDebugLog
     global g_cfgChkAutoTranslate, g_cfgEditApiBase, g_cfgEditApiKey, g_cfgCbbModel, g_cfgDdlTargetLang
-    global g_cfgChkGlossary, g_cfgEditTranslateKey, g_cfgEditSwitchKey
+    global g_cfgChkGlossary, g_cfgChkEnablePythonScraper, g_cfgEditTranslateKey, g_cfgEditSwitchKey
 
     AppConfig.OffsetX := Integer(g_cfgEditOffsetX.Value)
     AppConfig.OffsetY := Integer(g_cfgEditOffsetY.Value)
@@ -338,6 +367,7 @@ _Native_SaveConfig(*) {
     AppConfig.Model := g_cfgCbbModel.Text
     AppConfig.TargetLanguage := g_cfgDdlTargetLang.Text
     AppConfig.EnableGlossary := g_cfgChkGlossary.Value
+    AppConfig.EnablePythonScraper := g_cfgChkEnablePythonScraper.Value
     AppConfig.TranslateKey := Trim(g_cfgEditTranslateKey.Value)
     AppConfig.SwitchSourceKey := Trim(g_cfgEditSwitchKey.Value)
 
@@ -358,7 +388,7 @@ _Native_CloseConfig(*) {
 _Native_ResetConfig(*) {
     global g_cfgEditOffsetX, g_cfgEditOffsetY, g_cfgEditWidth, g_cfgEditHeight, g_cfgEditFontSize, g_cfgEditChunkDelay, g_cfgChkDebugLog
     global g_cfgChkAutoTranslate, g_cfgEditApiBase, g_cfgEditApiKey, g_cfgCbbModel, g_cfgDdlTargetLang
-    global g_cfgChkGlossary, g_cfgEditTranslateKey, g_cfgEditSwitchKey
+    global g_cfgChkGlossary, g_cfgChkEnablePythonScraper, g_cfgEditTranslateKey, g_cfgEditSwitchKey
 
     AppConfig.ResetDefaults()
     g_cfgEditOffsetX.Value := AppConfig.OffsetX
@@ -375,6 +405,7 @@ _Native_ResetConfig(*) {
     g_cfgCbbModel.Text := AppConfig.Model
     g_cfgDdlTargetLang.Text := AppConfig.TargetLanguage
     g_cfgChkGlossary.Value := AppConfig.EnableGlossary
+    g_cfgChkEnablePythonScraper.Value := AppConfig.EnablePythonScraper
     g_cfgEditTranslateKey.Value := AppConfig.TranslateKey
     g_cfgEditSwitchKey.Value := AppConfig.SwitchSourceKey
 
