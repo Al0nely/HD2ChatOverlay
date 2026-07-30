@@ -58,26 +58,6 @@
       "category": "term"
     },
     {
-      "zh": "蹂躏者",
-      "en": "devastator",
-      "aliases": [],
-      "category": "term"
-    },
-    {
-      "zh": "狂暴者",
-      "en": "berserker",
-      "aliases": [],
-      "category": "term"
-    },
-    {
-      "zh": "坦克",
-      "en": "annihilator tank",
-      "aliases": [
-        "歼灭者坦克"
-      ],
-      "category": "term"
-    },
-    {
       "zh": "胆汁喷吐者",
       "en": "bile spewer",
       "aliases": [
@@ -114,11 +94,92 @@
       "category": "term"
     },
     {
+      "zh": "战士虫",
+      "en": "warrior",
+      "aliases": [
+        "战士"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "清道夫",
+      "en": "scavenger",
+      "aliases": [
+        "小虫"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "幼年泰坦",
+      "en": "nursery titan",
+      "aliases": [],
+      "category": "term"
+    },
+    {
+      "zh": "阿尔法指挥官",
+      "en": "alpha commander",
+      "aliases": [
+        "红指挥官"
+      ],
+      "category": "term"
+    },
+    {
       "zh": "巨型者",
       "en": "hulk",
       "aliases": [
         "浩克"
       ],
+      "category": "term"
+    },
+    {
+      "zh": "蹂躏者",
+      "en": "devastator",
+      "aliases": [],
+      "category": "term"
+    },
+    {
+      "zh": "重型蹂躏者",
+      "en": "heavy devastator",
+      "aliases": [
+        "盾牌兵",
+        "大盾哥"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "火箭蹂躏者",
+      "en": "rocket devastator",
+      "aliases": [
+        "火箭哥"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "狂暴者",
+      "en": "berserker",
+      "aliases": [],
+      "category": "term"
+    },
+    {
+      "zh": "坦克",
+      "en": "annihilator tank",
+      "aliases": [
+        "歼灭者坦克"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "粉碎者坦克",
+      "en": "shredder tank",
+      "aliases": [
+        "机关炮坦克"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "火箭坦克",
+      "en": "rocket tank",
+      "aliases": [],
       "category": "term"
     },
     {
@@ -136,67 +197,40 @@
       "category": "term"
     },
     {
-      "zh": "无后坐力步枪",
-      "en": "recoilless rifle",
+      "zh": "步兵",
+      "en": "trooper",
       "aliases": [
-        "无后座"
+        "小机器人"
       ],
       "category": "term"
     },
     {
-      "zh": "磁轨炮",
-      "en": "railgun",
+      "zh": "侦察步行者",
+      "en": "scout strider",
+      "aliases": [
+        "鸡腿人",
+        "双足机器人"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "喷火浩克",
+      "en": "scorcher hulk",
+      "aliases": [
+        "喷火哥"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "火箭浩克",
+      "en": "rocket hulk",
       "aliases": [],
       "category": "term"
     },
     {
-      "zh": "破裂者",
-      "en": "breaker",
+      "zh": "战争步行者",
+      "en": "war strider",
       "aliases": [],
-      "category": "term"
-    },
-    {
-      "zh": "电弧发射器",
-      "en": "arc thrower",
-      "aliases": [
-        "电弧"
-      ],
-      "category": "term"
-    },
-    {
-      "zh": "火焰喷射器",
-      "en": "flamethrower",
-      "aliases": [
-        "喷火器"
-      ],
-      "category": "term"
-    },
-    {
-      "zh": "机枪",
-      "en": "machine gun",
-      "aliases": [
-        "MG"
-      ],
-      "category": "term"
-    },
-    {
-      "zh": "机炮",
-      "en": "autocannon",
-      "aliases": [],
-      "category": "term"
-    },
-    {
-      "zh": "飞矛",
-      "en": "spear",
-      "aliases": [],
-      "category": "term"
-    },
-    {
-      "zh": "类星体加农炮",
-      "en": "quasar cannon",
-      "aliases": [
-        "类星体"
-      ],
       "category": "term"
     },
     {
@@ -220,6 +254,40 @@
       "en": "eagle napalm airstrike",
       "aliases": [
         "汽油弹"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "飞鹰500KG炸弹",
+      "en": "eagle 500kg bomb",
+      "aliases": [
+        "500KG",
+        "500K"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "飞鹰110MM火箭巢",
+      "en": "eagle 110mm rocket pods",
+      "aliases": [
+        "110",
+        "110火箭"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "飞鹰扫射",
+      "en": "eagle strafing run",
+      "aliases": [
+        "扫射"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "飞鹰烟雾打击",
+      "en": "eagle smoke strike",
+      "aliases": [
+        "烟雾弹"
       ],
       "category": "term"
     },
@@ -256,33 +324,149 @@
       "category": "term"
     },
     {
-      "zh": "加特林哨戒炮",
-      "en": "gatling sentry",
+      "zh": "轨道120MM高爆弹幕",
+      "en": "orbital 120mm he barrage",
       "aliases": [
-        "哨戒炮"
+        "120"
       ],
       "category": "term"
     },
     {
-      "zh": "机枪哨戒炮",
-      "en": "machine gun sentry",
+      "zh": "轨道激光",
+      "en": "orbital laser",
+      "aliases": [
+        "激光"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "轨道移动弹幕",
+      "en": "orbital walking barrage",
+      "aliases": [
+        "移动弹幕"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "轨道空爆打击",
+      "en": "orbital airburst strike",
+      "aliases": [
+        "空爆"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "轨道加特林弹幕",
+      "en": "orbital gatling barrage",
+      "aliases": [
+        "加特林打击"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "无后坐力步枪",
+      "en": "recoilless rifle",
+      "aliases": [
+        "无后座"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "磁轨炮",
+      "en": "railgun",
       "aliases": [],
       "category": "term"
     },
     {
-      "zh": "迫击炮哨戒炮",
-      "en": "mortar sentry",
+      "zh": "电弧发射器",
+      "en": "arc thrower",
       "aliases": [
-        "迫击炮"
+        "电弧"
       ],
       "category": "term"
     },
     {
-      "zh": "特斯拉电塔",
-      "en": "tesla tower",
+      "zh": "火焰喷射器",
+      "en": "flamethrower",
       "aliases": [
-        "电塔"
+        "喷火器"
       ],
+      "category": "term"
+    },
+    {
+      "zh": "机枪",
+      "en": "machine gun",
+      "aliases": [
+        "MG"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "重型机枪",
+      "en": "heavy machine gun",
+      "aliases": [
+        "HMG"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "机炮",
+      "en": "autocannon",
+      "aliases": [],
+      "category": "term"
+    },
+    {
+      "zh": "飞矛",
+      "en": "spear",
+      "aliases": [],
+      "category": "term"
+    },
+    {
+      "zh": "类星体加农炮",
+      "en": "quasar cannon",
+      "aliases": [
+        "类星体"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "反器材步枪",
+      "en": "anti-materiel rifle",
+      "aliases": [
+        "AMR",
+        "狙击枪"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "榴弹发射器",
+      "en": "grenade launcher",
+      "aliases": [
+        "榴弹"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "司令官火箭筒",
+      "en": "commando",
+      "aliases": [
+        "司令官",
+        "四联装"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "空爆火箭发射器",
+      "en": "airburst rocket launcher",
+      "aliases": [
+        "空爆火箭"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "激光炮",
+      "en": "laser cannon",
+      "aliases": [],
       "category": "term"
     },
     {
@@ -318,10 +502,301 @@
       "category": "term"
     },
     {
+      "zh": "护卫犬漫游者",
+      "en": "guard dog rover",
+      "aliases": [
+        "激光狗"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "防弹盾牌背包",
+      "en": "ballistic shield backpack",
+      "aliases": [
+        "防弹盾"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "加特林哨戒炮",
+      "en": "gatling sentry",
+      "aliases": [
+        "哨戒炮"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "机枪哨戒炮",
+      "en": "machine gun sentry",
+      "aliases": [],
+      "category": "term"
+    },
+    {
+      "zh": "迫击炮哨戒炮",
+      "en": "mortar sentry",
+      "aliases": [
+        "迫击炮"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "电磁迫击炮哨戒炮",
+      "en": "ems mortar sentry",
+      "aliases": [
+        "电磁迫击炮"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "机炮哨戒炮",
+      "en": "autocannon sentry",
+      "aliases": [
+        "机炮塔"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "火箭哨戒炮",
+      "en": "rocket sentry",
+      "aliases": [
+        "火箭塔"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "特斯拉电塔",
+      "en": "tesla tower",
+      "aliases": [
+        "电塔"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "护盾生成器中继器",
+      "en": "shield generator relay",
+      "aliases": [
+        "大护盾",
+        "护盾罩"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "杀伤人员地雷",
+      "en": "anti-personnel minefield",
+      "aliases": [
+        "地雷"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "燃烧地雷",
+      "en": "incendiary mines",
+      "aliases": [
+        "火雷"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "反坦克地雷",
+      "en": "anti-tank mines",
+      "aliases": [],
+      "category": "term"
+    },
+    {
+      "zh": "重型机枪阵地",
+      "en": "heavy machine gun emplacement",
+      "aliases": [
+        "固定机枪"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "爱国者外骨骼机甲",
+      "en": "patriot exosuit",
+      "aliases": [
+        "机甲",
+        "高达"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "解放者外骨骼机甲",
+      "en": "emancipator exosuit",
+      "aliases": [
+        "双机炮机甲"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "破裂者",
+      "en": "breaker",
+      "aliases": [],
+      "category": "term"
+    },
+    {
+      "zh": "惩罚者",
+      "en": "punisher",
+      "aliases": [],
+      "category": "term"
+    },
+    {
+      "zh": "独头弹惩罚者",
+      "en": "slugger",
+      "aliases": [
+        "独头弹"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "镰刀",
+      "en": "sickle",
+      "aliases": [],
+      "category": "term"
+    },
+    {
+      "zh": "焦土",
+      "en": "scorcher",
+      "aliases": [],
+      "category": "term"
+    },
+    {
+      "zh": "主宰",
+      "en": "dominator",
+      "aliases": [
+        "JAR-5主宰"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "救赎者手枪",
+      "en": "p-19 redeemer",
+      "aliases": [
+        "救赎者"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "参议员左轮",
+      "en": "p-4 senator",
+      "aliases": [
+        "参议员",
+        "左轮"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "冲击手雷",
+      "en": "impact grenade",
+      "aliases": [
+        "冲击弹"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "眩晕手雷",
+      "en": "stun grenade",
+      "aliases": [
+        "眩晕弹"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "铝热手雷",
+      "en": "thermite grenade",
+      "aliases": [
+        "铝热弹"
+      ],
+      "category": "term"
+    },
+    {
       "zh": "地狱火炸弹",
       "en": "hellbomb",
       "aliases": [
         "地狱火"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "雷达站",
+      "en": "radar station",
+      "aliases": [],
+      "category": "term"
+    },
+    {
+      "zh": "干扰塔",
+      "en": "jamming tower",
+      "aliases": [
+        "干扰站"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "检测塔",
+      "en": "detector tower",
+      "aliases": [
+        "眼睛塔"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "炮艇工厂",
+      "en": "gunship facility",
+      "aliases": [
+        "炮艇基地"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "战术炮台",
+      "en": "seaf artillery",
+      "aliases": [
+        "SEAF炮台"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "防空导弹阵地",
+      "en": "sam site",
+      "aliases": [
+        "SAM阵地"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "防空炮",
+      "en": "anti-air",
+      "aliases": [
+        "AA炮"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "尖啸者巢穴",
+      "en": "shrieker nest",
+      "aliases": [
+        "飞虫巢"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "虫巢",
+      "en": "bug nest",
+      "aliases": [
+        "虫穴"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "虫巢爆发",
+      "en": "bug breach",
+      "aliases": [],
+      "category": "term"
+    },
+    {
+      "zh": "撤离点",
+      "en": "extraction point",
+      "aliases": [
+        "撤离区"
       ],
       "category": "term"
     },
@@ -350,6 +825,33 @@
       "en": "sample",
       "aliases": [
         "标本"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "普通样本",
+      "en": "common sample",
+      "aliases": [
+        "绿色样本",
+        "绿样"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "稀有样本",
+      "en": "rare sample",
+      "aliases": [
+        "橙色样本",
+        "橙样"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "超级样本",
+      "en": "super sample",
+      "aliases": [
+        "粉色样本",
+        "粉样"
       ],
       "category": "term"
     },
@@ -387,42 +889,47 @@
       "category": "term"
     },
     {
-      "zh": "撤离",
-      "en": "extract",
-      "aliases": [
-        "撤退"
-      ],
-      "category": "term"
-    },
-    {
-      "zh": "撤离点",
-      "en": "extraction point",
-      "aliases": [
-        "撤离区"
-      ],
-      "category": "term"
-    },
-    {
-      "zh": "虫巢",
-      "en": "bug nest",
-      "aliases": [
-        "虫穴"
-      ],
-      "category": "term"
-    },
-    {
-      "zh": "虫巢爆发",
-      "en": "bug breach",
-      "aliases": [],
-      "category": "term"
-    },
-    {
       "zh": "战术配备",
       "en": "stratagem",
       "aliases": [
         "战略配备"
       ],
       "category": "term"
+    },
+    {
+      "zh": "队友伤害",
+      "en": "friendly fire",
+      "aliases": [
+        "友军伤害",
+        "FF"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "次要目标",
+      "en": "side objective",
+      "aliases": [
+        "副任务",
+        "支线"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "主要目标",
+      "en": "main objective",
+      "aliases": [
+        "主任务",
+        "主线"
+      ],
+      "category": "term"
+    },
+    {
+      "zh": "撤离",
+      "en": "extract",
+      "aliases": [
+        "撤退"
+      ],
+      "category": "action"
     },
     {
       "zh": "增援",
@@ -488,6 +995,52 @@
       "zh": "踢人",
       "en": "kick",
       "aliases": [],
+      "category": "action"
+    },
+    {
+      "zh": "清巢",
+      "en": "clear nest",
+      "aliases": [
+        "清理虫巢"
+      ],
+      "category": "action"
+    },
+    {
+      "zh": "清据点",
+      "en": "clear outpost",
+      "aliases": [
+        "拆据点"
+      ],
+      "category": "action"
+    },
+    {
+      "zh": "丢样本",
+      "en": "drop samples",
+      "aliases": [
+        "掉落样本"
+      ],
+      "category": "action"
+    },
+    {
+      "zh": "掩护我",
+      "en": "cover me",
+      "aliases": [],
+      "category": "action"
+    },
+    {
+      "zh": "拉开距离",
+      "en": "fall back",
+      "aliases": [
+        "撤退"
+      ],
+      "category": "action"
+    },
+    {
+      "zh": "压进去",
+      "en": "push in",
+      "aliases": [
+        "冲"
+      ],
       "category": "action"
     }
   ]
