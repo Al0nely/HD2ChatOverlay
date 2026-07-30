@@ -98,7 +98,6 @@ def main():
 
     # 3. 上传附件
     assets = [
-        ("HD2ChatOverlay.exe", "HD2ChatOverlay.exe", "application/octet-stream"),
         ("release/HD2ChatOverlay-v1.4.0.zip", "HD2ChatOverlay-v1.4.0.zip", "application/zip")
     ]
 
