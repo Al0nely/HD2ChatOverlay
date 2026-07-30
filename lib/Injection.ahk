@@ -76,7 +76,8 @@ TranslateCurrentText(*) {
 ; 提交文本到游戏 (按当前选中框注入)
 ; -------------------------------------------------------------
 SubmitText(*) {
-    global isChatActive, g_injectSource
+    global isChatActive, g_injectSource, g_ignoreEnterUntil
+    g_ignoreEnterUntil := A_TickCount + 400
     if !isChatActive
         return
 

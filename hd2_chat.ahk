@@ -135,12 +135,14 @@ _ProcessShellEvent(activeHwnd) {
     lastActiveHwnd := activeHwnd
 }
 
+global g_ignoreEnterUntil := 0
+
 ; -------------------------------------------------------------
 ; 热键定义
 ; -------------------------------------------------------------
 
-; 游戏内且未激活聊天时: Enter 唤醒悬浮窗
-#HotIf (WinActive("ahk_exe helldivers2.exe") || AppConfig.GlobalTestMode) && !isChatActive && !isAdjusting
+; 游戏内且未激活聊天时: Enter 唤醒悬浮窗 (增加 g_ignoreEnterUntil 过滤文本提交发送的合成 Enter)
+#HotIf (WinActive("ahk_exe helldivers2.exe") || AppConfig.GlobalTestMode) && !isChatActive && !isAdjusting && (A_TickCount > g_ignoreEnterUntil)
 
 $~$Enter::
 $~$NumpadEnter:: {

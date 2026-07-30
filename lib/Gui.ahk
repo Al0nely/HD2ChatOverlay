@@ -29,11 +29,11 @@ InitChatGui() {
 ; 显示悬浮窗
 ; -------------------------------------------------------------
 ShowChatGui() {
-    global isChatActive, lastShowTime, isBoundToGame, overlayInvokedWindow
+    global isChatActive, lastShowTime, isBoundToGame, overlayInvokedWindow, g_ignoreEnterUntil
 
     WriteLog("[Gui] ShowChatGui 被调用, isChatActive=" isChatActive)
 
-    if (isChatActive || (A_TickCount - lastShowTime < 200)) {
+    if (isChatActive || (A_TickCount - lastShowTime < 200) || (A_TickCount <= g_ignoreEnterUntil)) {
         WriteLog("[Gui] 显示被跳过: isChatActive=" isChatActive ", 时间间隔=" (A_TickCount - lastShowTime))
         return
     }
@@ -95,8 +95,9 @@ HideGuiToOffscreen() {
 }
 
 CloseGui(sendEsc := false) {
-    global isChatActive, nativeIsChatActive, g_injectSource
+    global isChatActive, nativeIsChatActive, g_injectSource, g_ignoreEnterUntil
 
+    g_ignoreEnterUntil := A_TickCount + 400
     if !isChatActive {
         nativeIsChatActive := false
         return
