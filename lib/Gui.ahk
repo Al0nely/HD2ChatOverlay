@@ -10,6 +10,7 @@ global isChatActive := false
 global isAdjusting := false
 global lastShowTime := 0
 global isBoundToGame := false
+global g_injectSource := "original"   ; 注入源: "original" 原文框 | "translated" 译文框
 
 ; -------------------------------------------------------------
 ; 初始化悬浮窗
@@ -51,7 +52,34 @@ ShowChatGui() {
     } catch {
     }
 
+    ; 注入源初始状态: 开启翻译默认译文框, 否则原文框
+    g_injectSource := AppConfig.EnableAutoTranslate ? "translated" : "original"
+
     Native_ShowChatGui()
+    Native_HighlightSource(g_injectSource)
+}
+
+; -------------------------------------------------------------
+; 注入源状态机: 设置/切换 (Ctrl+Tab)
+; -------------------------------------------------------------
+SetInjectSource(source) {
+    global g_injectSource
+    ; 译文框不可见或为空时强制回退原文框
+    if (source = "translated" && (!Native_IsTransVisible() || Native_GetTransText() = ""))
+        source := "original"
+    g_injectSource := source
+    Native_HighlightSource(source)
+    WriteLog("[Gui] 注入源切换: " source)
+}
+
+ToggleInjectSource(*) {
+    global g_injectSource
+    if !isChatActive
+        return
+    if (!AppConfig.EnableAutoTranslate || !Native_IsTransVisible())
+        return
+    SetInjectSource(g_injectSource = "translated" ? "original" : "translated")
+    FocusInput()
 }
 
 ; -------------------------------------------------------------
@@ -67,7 +95,7 @@ HideGuiToOffscreen() {
 }
 
 CloseGui(sendEsc := false) {
-    global isChatActive, nativeIsChatActive
+    global isChatActive, nativeIsChatActive, g_injectSource
 
     if !isChatActive {
         nativeIsChatActive := false
@@ -76,7 +104,9 @@ CloseGui(sendEsc := false) {
 
     isChatActive := false
     nativeIsChatActive := false
+    g_injectSource := "original"
     ClearInput()
+    Native_ClearTransText()
     HideGuiToOffscreen()
 
     gameHwnd := GetGameHwnd()
@@ -201,6 +231,16 @@ AdjustGuiPos(deltaX, deltaY) {
             AppConfig.OffsetY := Y + H - posY
 
             nativeChatGui.Move(posX, posY)
+
+            ; 译文框随主框联动 (位于正上方)
+            if (nativeTransVisible && nativeTransGui) {
+                w := AppConfig.OverlayWidth > 0 ? AppConfig.OverlayWidth : 640
+                h := AppConfig.OverlayHeight > 0 ? AppConfig.OverlayHeight : 58
+                transY := posY - h - TRANS_OVERLAY_GAP
+                if (transY < 0)
+                    transY := 0
+                nativeTransGui.Move(posX, transY, w, h)
+            }
         } catch TargetError {
         }
     }

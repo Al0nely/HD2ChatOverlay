@@ -1,5 +1,5 @@
 ; lib/Config.ahk - 配置管理与 INI 持久化
-; 配置节: [Coordinates], [Injection], [Debug], [UI], [Mode], [Engine]
+; 配置节: [Coordinates], [Injection], [Debug], [UI], [Mode], [Translation], [Hotkeys]
 
 class AppConfig {
     static iniPath := A_ScriptDir "\hd2_chat_settings.ini"
@@ -32,6 +32,15 @@ class AppConfig {
     static Model := "google/gemini-2.5-flash"
     static TargetLanguage := "English"
 
+    ; 术语库配置 ([Translation] 节)
+    static EnableGlossary := true
+    static GlossaryUrl := "https://raw.githubusercontent.com/helldivers-2/json/main/glossary.json"
+    static GlossaryLocalPath := A_ScriptDir "\assets\glossary.core.json"
+
+    ; 快捷键配置 ([Hotkeys] 节, AHK 热键语法: ^=Ctrl !=Alt +=Shift)
+    static TranslateKey := "^t"
+    static SwitchSourceKey := "^Tab"
+
     ; 从 INI 加载全部配置
     static Load() {
         this.OffsetX := this._ReadInt("Coordinates", "OffsetX", 840)
@@ -49,6 +58,11 @@ class AppConfig {
         this.ApiKey := this._ReadStr("Translation", "ApiKey", "")
         this.Model := this._ReadStr("Translation", "Model", "google/gemini-2.5-flash")
         this.TargetLanguage := this._ReadStr("Translation", "TargetLanguage", "English")
+        this.EnableGlossary := this._ReadBool("Translation", "EnableGlossary", true)
+        this.GlossaryUrl := this._ReadStr("Translation", "GlossaryUrl", "https://raw.githubusercontent.com/helldivers-2/json/main/glossary.json")
+        this.GlossaryLocalPath := this._ReadStr("Translation", "GlossaryLocalPath", A_ScriptDir "\assets\glossary.core.json")
+        this.TranslateKey := this._ReadStr("Hotkeys", "TranslateKey", "^t")
+        this.SwitchSourceKey := this._ReadStr("Hotkeys", "SwitchSourceKey", "^Tab")
     }
 
     ; 保存全部配置到 INI (自动备份)
@@ -71,6 +85,11 @@ class AppConfig {
             IniWrite(this.ApiKey, this.iniPath, "Translation", "ApiKey")
             IniWrite(this.Model, this.iniPath, "Translation", "Model")
             IniWrite(this.TargetLanguage, this.iniPath, "Translation", "TargetLanguage")
+            IniWrite(this.EnableGlossary ? "1" : "0", this.iniPath, "Translation", "EnableGlossary")
+            IniWrite(this.GlossaryUrl, this.iniPath, "Translation", "GlossaryUrl")
+            IniWrite(this.GlossaryLocalPath, this.iniPath, "Translation", "GlossaryLocalPath")
+            IniWrite(this.TranslateKey, this.iniPath, "Hotkeys", "TranslateKey")
+            IniWrite(this.SwitchSourceKey, this.iniPath, "Hotkeys", "SwitchSourceKey")
         } catch Error as err {
             WriteLog("[Config] 保存失败: " err.Message)
         }
@@ -93,6 +112,11 @@ class AppConfig {
         this.ApiKey := ""
         this.Model := "google/gemini-2.5-flash"
         this.TargetLanguage := "English"
+        this.EnableGlossary := true
+        this.GlossaryUrl := "https://raw.githubusercontent.com/helldivers-2/json/main/glossary.json"
+        this.GlossaryLocalPath := A_ScriptDir "\assets\glossary.core.json"
+        this.TranslateKey := "^t"
+        this.SwitchSourceKey := "^Tab"
     }
 
     ; 创建配置备份 (滚动保留最近 N 份)

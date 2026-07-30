@@ -15,7 +15,9 @@ class OpenRouterClient {
         try {
             http := ComObject("WinHttp.WinHttpRequest.5.1")
             http.Open("GET", url, true) ; 异步请求
-            http.SetRequestHeader("User-Agent", "HD2ChatOverlay/1.2.0")
+            http.SetRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) HD2ChatOverlay/1.3.0")
+            http.SetRequestHeader("HTTP-Referer", "https://github.com/HD2ChatOverlay")
+            http.SetRequestHeader("X-Title", "HD2 Chat Overlay")
             if (apiKey != "")
                 http.SetRequestHeader("Authorization", "Bearer " apiKey)
             
@@ -25,15 +27,12 @@ class OpenRouterClient {
             }
 
             if (http.Status != 200) {
-                return { success: false, error: "HTTP 错误: " http.Status, models: [] }
+                return { success: false, error: this._ExtractErrorMessage(http.Status, http.ResponseText), models: [] }
             }
 
             respText := http.ResponseText
             models := this._ParseModelList(respText)
             
-            if (models.Length = 0)
-                return { success: false, error: "解析模型列表为空", models: [] }
-
             return { success: true, error: "", models: models }
         } catch Error as err {
             return { success: false, error: "网络连接失败: " err.Message, models: [] }
@@ -41,9 +40,47 @@ class OpenRouterClient {
     }
 
     ; -------------------------------------------------------------
+    ; 测试 API 连通性 (GET /v1/models 不消耗 LLM Token)
+    ; -------------------------------------------------------------
+    static TestConnection(apiBase, apiKey) {
+        if (apiBase = "")
+            apiBase := "https://openrouter.ai/api/v1"
+
+        url := RegExReplace(apiBase, "/+$", "") "/models"
+
+        startMs := A_TickCount
+        try {
+            http := ComObject("WinHttp.WinHttpRequest.5.1")
+            http.Open("GET", url, true) ; 异步请求
+            http.SetRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) HD2ChatOverlay/1.3.0")
+            http.SetRequestHeader("HTTP-Referer", "https://github.com/HD2ChatOverlay")
+            http.SetRequestHeader("X-Title", "HD2 Chat Overlay")
+            if (apiKey != "")
+                http.SetRequestHeader("Authorization", "Bearer " apiKey)
+            
+            http.Send()
+            if !http.WaitForResponse(5) { ; 5 秒超时
+                return { success: false, latencyMs: 0, error: "连接超时 (5s)", status: 0 }
+            }
+
+            latencyMs := A_TickCount - startMs
+            status := http.Status
+
+            if (status == 200) {
+                return { success: true, latencyMs: latencyMs, error: "", status: 200 }
+            } else {
+                errDetail := this._ExtractErrorMessage(status, http.ResponseText)
+                return { success: false, latencyMs: latencyMs, error: errDetail, status: status }
+            }
+        } catch Error as err {
+            return { success: false, latencyMs: 0, error: "网络连接失败: " err.Message, status: 0 }
+        }
+    }
+
+    ; -------------------------------------------------------------
     ; 翻译文本 (POST /v1/chat/completions)
     ; -------------------------------------------------------------
-    static TranslateText(text, targetLang, apiBase, apiKey, model) {
+    static TranslateText(text, targetLang, apiBase, apiKey, model, glossaryHint := "") {
         if (text = "")
             return { success: false, text: "", error: "输入文本为空" }
 
@@ -56,20 +93,27 @@ class OpenRouterClient {
 
         url := RegExReplace(apiBase, "/+$", "") "/chat/completions"
 
-        systemPrompt := "You are a fast game chat translator for Helldivers 2 (《绝地潜兵 2》). Translate the user text directly into " targetLang ". Keep it brief, natural, matching game tone and slang. Output ONLY the translated text without quotes or explanations."
+        ; 基础 System Prompt: HD2 游戏语气 + 术语约束
+        systemPrompt := "You are a fast game chat translator for Helldivers 2 (《绝地潜兵 2》). Translate the user text directly into " targetLang ". Keep it brief, natural, matching game tone and slang. Use official Helldivers 2 terminology (e.g. 虫族=Terminid, 机器人=Automaton, 撤离=extract, 战术配备=stratagem). Output ONLY the translated text without quotes or explanations."
+
+        ; AC 自动机预扫描命中的当句术语动态注入
+        if (glossaryHint != "")
+            systemPrompt .= " " glossaryHint
 
         jsonBody := '{"model":"' this._EscapeJsonStr(model) '",'
         jsonBody .= '"messages":['
         jsonBody .= '{"role":"system","content":"' this._EscapeJsonStr(systemPrompt) '"},'
         jsonBody .= '{"role":"user","content":"' this._EscapeJsonStr(text) '"}'
         jsonBody .= '],'
-        jsonBody .= '"temperature":0.3}'
+        jsonBody .= '"temperature":0.2}'
 
         try {
             http := ComObject("WinHttp.WinHttpRequest.5.1")
             http.Open("POST", url, true)
             http.SetRequestHeader("Content-Type", "application/json; charset=utf-8")
-            http.SetRequestHeader("User-Agent", "HD2ChatOverlay/1.2.0")
+            http.SetRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) HD2ChatOverlay/1.3.0")
+            http.SetRequestHeader("HTTP-Referer", "https://github.com/HD2ChatOverlay")
+            http.SetRequestHeader("X-Title", "HD2 Chat Overlay")
             if (apiKey != "")
                 http.SetRequestHeader("Authorization", "Bearer " apiKey)
             
@@ -79,7 +123,7 @@ class OpenRouterClient {
             }
 
             if (http.Status != 200) {
-                return { success: false, text: text, error: "HTTP 错误: " http.Status }
+                return { success: false, text: text, error: this._ExtractErrorMessage(http.Status, http.ResponseText) }
             }
 
             respText := http.ResponseText
@@ -153,5 +197,31 @@ class OpenRouterClient {
             return Trim(this._UnescapeJsonStr(m[1]), " `t`r`n`"")
         }
         return ""
+    }
+
+    ; -------------------------------------------------------------
+    ; 提取 JSON 报错响应中的详细错误原因
+    ; -------------------------------------------------------------
+    static _ExtractErrorMessage(httpStatus, responseText) {
+        errMsg := "HTTP 错误: " httpStatus
+        if (responseText != "") {
+            if RegExMatch(responseText, '"message"\s*:\s*"((?:[^"\\]|\\.)*)"', &mErr) {
+                detail := this._UnescapeJsonStr(mErr[1])
+                if (detail != "")
+                    return errMsg " (" detail ")"
+            }
+            if RegExMatch(responseText, '"error"\s*:\s*"((?:[^"\\]|\\.)*)"', &mErr2) {
+                detail2 := this._UnescapeJsonStr(mErr2[1])
+                if (detail2 != "")
+                    return errMsg " (" detail2 ")"
+            }
+        }
+        if (httpStatus == 403)
+            return errMsg " (403 拒绝访问: 请检查 API Key 有效性/节点授权/OpenRouter 余额)"
+        if (httpStatus == 401)
+            return errMsg " (401 未授权: API Key 错误或已被撤销)"
+        if (httpStatus == 404)
+            return errMsg " (404 未找到接口: 请检查 API Base 格式)"
+        return errMsg
     }
 }

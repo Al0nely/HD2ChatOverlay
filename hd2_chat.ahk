@@ -5,7 +5,7 @@ KeyHistory 0
 
 ; -------------------------------------------------------------
 ; HD2 Chat Overlay - 主入口
-; 版本: 1.2.0
+; 版本: 1.3.0
 ; 功能: 《绝地潜兵 2》中文输入悬浮窗插件 (原生模式)
 ; -------------------------------------------------------------
 
@@ -19,6 +19,7 @@ CoordMode "Pixel", "Screen"
 #Include %A_ScriptDir%\lib\Config.ahk
 #Include %A_ScriptDir%\lib\Utils.ahk
 #Include %A_ScriptDir%\lib\Translation.ahk
+#Include %A_ScriptDir%\lib\Glossary.ahk
 #Include %A_ScriptDir%\lib\Gui.Native.ahk
 #Include %A_ScriptDir%\lib\ConfigGui.Native.ahk
 #Include %A_ScriptDir%\lib\Gui.ahk
@@ -35,8 +36,30 @@ SetProcessDpiAwareness()
 
 AppConfig.Load()
 
+; 初始化术语库 (AC 自动机), 失败不阻塞主流程
+Glossary.Init()
+
 InitTrayMenu()
 InitChatGui()
+
+; 动态绑定翻译/切换注入源热键 (INI [Hotkeys] 可自定义)
+RegisterTranslationHotkeys()
+
+RegisterTranslationHotkeys() {
+    ; 仅在悬浮窗激活时生效 (与下方 #HotIf 条件一致)
+    HotIf((*) => isChatActive || WinActive("ahk_id " GetChatGuiHwnd()))
+    if (AppConfig.TranslateKey != "") {
+        try Hotkey(AppConfig.TranslateKey, TranslateCurrentText)
+        catch Error as err
+            WriteLog("[Main] 翻译热键注册失败 (" AppConfig.TranslateKey "): " err.Message)
+    }
+    if (AppConfig.SwitchSourceKey != "") {
+        try Hotkey(AppConfig.SwitchSourceKey, ToggleInjectSource)
+        catch Error as err
+            WriteLog("[Main] 切换注入源热键注册失败 (" AppConfig.SwitchSourceKey "): " err.Message)
+    }
+    HotIf()  ; 重置上下文
+}
 
 ; -------------------------------------------------------------
 ; ShellHook 窗口切换监听(带防抖)
@@ -122,13 +145,12 @@ $~$NumpadEnter:: {
 
 #HotIf
 
-; 悬浮窗激活时: Enter 提交, Ctrl+Enter 翻译提交, Esc 取消, 滚轮转发, 位置调整
+; 悬浮窗激活时: Enter 提交(按选中框), Esc 取消, 滚轮转发, 位置调整
+; 翻译(Ctrl+T)与切换注入源(Ctrl+Tab)热键由 RegisterTranslationHotkeys() 动态注册
 #HotIf isChatActive || WinActive("ahk_id " GetChatGuiHwnd())
 
-Enter:: SubmitText(false)
-NumpadEnter:: SubmitText(false)
-^Enter:: SubmitText(true)
-^NumpadEnter:: SubmitText(true)
+Enter:: SubmitText()
+NumpadEnter:: SubmitText()
 Escape:: CloseGui(true)
 
 WheelUp:: ForwardScrollToGame("WheelUp")
