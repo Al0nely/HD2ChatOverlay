@@ -5,11 +5,14 @@ import zipfile
 def build():
     root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     ahk2exe = os.path.join(root_dir, "tools", "Ahk2Exe", "Ahk2Exe.exe")
-    ahk_base = r"C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe"
+    ahk_base_uia = r"C:\Program Files\AutoHotkey\v2\AutoHotkey64_UIA.exe"
+    ahk_base_std = r"C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe"
+    ahk_base = ahk_base_uia if os.path.exists(ahk_base_uia) else ahk_base_std
+
     main_script = os.path.join(root_dir, "hd2_chat.ahk")
     exe_output = os.path.join(root_dir, "HD2ChatOverlay.exe")
 
-    print(f"[Build] Compiling {main_script} -> {exe_output} ...")
+    print(f"[Build] Compiling {main_script} -> {exe_output} (Base: {os.path.basename(ahk_base)}) ...")
     cmd = [
         ahk2exe,
         "/in", main_script,
