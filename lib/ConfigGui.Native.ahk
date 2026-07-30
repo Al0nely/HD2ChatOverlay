@@ -11,6 +11,7 @@ global g_cfgChkAutoTranslate := ""
 global g_cfgEditApiBase := ""
 global g_cfgEditApiKey := ""
 global g_cfgCbbModel := ""
+global g_cfgDdlSourceLang := ""
 global g_cfgDdlTargetLang := ""
 global g_cfgTxtApiStatus := ""
 global g_cfgChkGlossary := ""
@@ -25,7 +26,7 @@ global g_hotkeyRecorderIH := 0
 Native_ShowConfigGui() {
     global nativeConfigGui, isChatActive, nativeIsChatActive, nativeEditBox
     global g_cfgEditOffsetX, g_cfgEditOffsetY, g_cfgEditWidth, g_cfgEditHeight, g_cfgEditFontSize, g_cfgEditChunkDelay, g_cfgChkDebugLog
-    global g_cfgChkAutoTranslate, g_cfgEditApiBase, g_cfgEditApiKey, g_cfgCbbModel, g_cfgDdlTargetLang, g_cfgTxtApiStatus
+    global g_cfgChkAutoTranslate, g_cfgEditApiBase, g_cfgEditApiKey, g_cfgCbbModel, g_cfgDdlSourceLang, g_cfgDdlTargetLang, g_cfgTxtApiStatus
     global g_cfgChkGlossary, g_cfgChkEnablePythonScraper, g_cfgTxtGlossaryStatus, btnSetTranslateKey, btnSetSwitchKey, g_cfgTranslateKeyVal, g_cfgSwitchKeyVal
 
     ; 先将激活状态归零，确保 Native_ShowChatGui() 能正常弹窗展示
@@ -54,6 +55,7 @@ Native_ShowConfigGui() {
                 g_cfgCbbModel.Add(savedModels)
                 g_cfgCbbModel.Text := AppConfig.Model
             }
+            g_cfgDdlSourceLang.Text := AppConfig.SourceLanguage
             g_cfgDdlTargetLang.Text := AppConfig.TargetLanguage
             g_cfgChkGlossary.Value := AppConfig.EnableGlossary
             g_cfgChkEnablePythonScraper.Value := AppConfig.EnablePythonScraper
@@ -134,10 +136,16 @@ Native_ShowConfigGui() {
 
     btnTestApi := nativeConfigGui.AddButton("xm+15 w130 h26", "🔌 测试 API 连接")
     btnFetchModels := nativeConfigGui.AddButton("x+10 w130 h26", "🔄 拉取模型列表")
-    nativeConfigGui.AddText("x+10 w65 +0x200", "目标语言:")
     
-    langList := ["English", "Chinese", "Japanese", "German", "French", "Spanish", "Russian"]
-    g_cfgDdlTargetLang := nativeConfigGui.AddDropDownList("x+5 w115 c000000", langList)
+    srcLangList := ["Auto", "Chinese", "English", "Japanese", "German", "French", "Spanish", "Russian"]
+    targetLangList := ["English", "Chinese", "Japanese", "German", "French", "Spanish", "Russian", "Auto"]
+    
+    nativeConfigGui.AddText("xm+15 w65 +0x200", "源语言:")
+    g_cfgDdlSourceLang := nativeConfigGui.AddDropDownList("x+5 w100 c000000", srcLangList)
+    g_cfgDdlSourceLang.Text := AppConfig.SourceLanguage
+
+    nativeConfigGui.AddText("x+15 w65 +0x200", "目标语言:")
+    g_cfgDdlTargetLang := nativeConfigGui.AddDropDownList("x+5 w100 c000000", targetLangList)
     g_cfgDdlTargetLang.Text := AppConfig.TargetLanguage
 
     nativeConfigGui.AddText("xm+15 w115 +0x200", "模型选择:")
@@ -393,7 +401,7 @@ _Native_UpdatePreview() {
 
 _Native_SaveConfig(*) {
     global nativeConfigGui, g_cfgEditOffsetX, g_cfgEditOffsetY, g_cfgEditWidth, g_cfgEditHeight, g_cfgEditFontSize, g_cfgEditChunkDelay, g_cfgChkDebugLog
-    global g_cfgChkAutoTranslate, g_cfgEditApiBase, g_cfgEditApiKey, g_cfgCbbModel, g_cfgDdlTargetLang
+    global g_cfgChkAutoTranslate, g_cfgEditApiBase, g_cfgEditApiKey, g_cfgCbbModel, g_cfgDdlSourceLang, g_cfgDdlTargetLang
     global g_cfgChkGlossary, g_cfgChkEnablePythonScraper, g_cfgTranslateKeyVal, g_cfgSwitchKeyVal
 
     AppConfig.OffsetX := Integer(g_cfgEditOffsetX.Value)
@@ -408,6 +416,7 @@ _Native_SaveConfig(*) {
     AppConfig.ApiBase := g_cfgEditApiBase.Value
     AppConfig.ApiKey := g_cfgEditApiKey.Value
     AppConfig.Model := g_cfgCbbModel.Text
+    AppConfig.SourceLanguage := g_cfgDdlSourceLang.Text
     AppConfig.TargetLanguage := g_cfgDdlTargetLang.Text
     AppConfig.EnableGlossary := g_cfgChkGlossary.Value
     AppConfig.EnablePythonScraper := g_cfgChkEnablePythonScraper.Value
@@ -430,7 +439,7 @@ _Native_CloseConfig(*) {
 
 _Native_ResetConfig(*) {
     global g_cfgEditOffsetX, g_cfgEditOffsetY, g_cfgEditWidth, g_cfgEditHeight, g_cfgEditFontSize, g_cfgEditChunkDelay, g_cfgChkDebugLog
-    global g_cfgChkAutoTranslate, g_cfgEditApiBase, g_cfgEditApiKey, g_cfgCbbModel, g_cfgDdlTargetLang
+    global g_cfgChkAutoTranslate, g_cfgEditApiBase, g_cfgEditApiKey, g_cfgCbbModel, g_cfgDdlSourceLang, g_cfgDdlTargetLang
     global g_cfgChkGlossary, g_cfgChkEnablePythonScraper, btnSetTranslateKey, btnSetSwitchKey, g_cfgTranslateKeyVal, g_cfgSwitchKeyVal
 
     AppConfig.ResetDefaults()
@@ -446,6 +455,7 @@ _Native_ResetConfig(*) {
     g_cfgEditApiBase.Value := AppConfig.ApiBase
     g_cfgEditApiKey.Value := AppConfig.ApiKey
     g_cfgCbbModel.Text := AppConfig.Model
+    g_cfgDdlSourceLang.Text := AppConfig.SourceLanguage
     g_cfgDdlTargetLang.Text := AppConfig.TargetLanguage
     g_cfgChkGlossary.Value := AppConfig.EnableGlossary
     g_cfgChkEnablePythonScraper.Value := AppConfig.EnablePythonScraper

@@ -31,6 +31,7 @@ class AppConfig {
     static ApiKey := ""
     static Model := "google/gemini-2.5-flash"
     static ModelList := ""
+    static SourceLanguage := "Auto"
     static TargetLanguage := "English"
 
     ; 术语库配置 ([Translation] 节)
@@ -60,6 +61,7 @@ class AppConfig {
         this.ApiKey := this._ReadStr("Translation", "ApiKey", "")
         this.Model := this._ReadStr("Translation", "Model", "google/gemini-2.5-flash")
         this.ModelList := this._ReadStr("Translation", "ModelList", "")
+        this.SourceLanguage := this._ReadStr("Translation", "SourceLanguage", "Auto")
         this.TargetLanguage := this._ReadStr("Translation", "TargetLanguage", "English")
         this.EnableGlossary := this._ReadBool("Translation", "EnableGlossary", true)
         this.EnablePythonScraper := this._ReadBool("Translation", "EnablePythonScraper", true)
@@ -93,6 +95,7 @@ class AppConfig {
             IniWrite(this.ApiKey, this.iniPath, "Translation", "ApiKey")
             IniWrite(this.Model, this.iniPath, "Translation", "Model")
             IniWrite(this.ModelList, this.iniPath, "Translation", "ModelList")
+            IniWrite(this.SourceLanguage, this.iniPath, "Translation", "SourceLanguage")
             IniWrite(this.TargetLanguage, this.iniPath, "Translation", "TargetLanguage")
             IniWrite(this.EnableGlossary ? "1" : "0", this.iniPath, "Translation", "EnableGlossary")
             IniWrite(this.EnablePythonScraper ? "1" : "0", this.iniPath, "Translation", "EnablePythonScraper")
@@ -122,6 +125,7 @@ class AppConfig {
         this.ApiKey := ""
         this.Model := "google/gemini-2.5-flash"
         this.ModelList := ""
+        this.SourceLanguage := "Auto"
         this.TargetLanguage := "English"
         this.EnableGlossary := true
         this.EnablePythonScraper := true

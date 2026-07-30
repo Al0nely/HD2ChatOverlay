@@ -17,6 +17,20 @@ global nativeTransVisible := false
 ; 译文框与原文框的垂直间距 (px)
 global TRANS_OVERLAY_GAP := 6
 
+GetLangTag(langName) {
+    switch StrLower(Trim(langName)) {
+        case "chinese", "中文", "zh": return "中"
+        case "english", "英文", "en": return "EN"
+        case "japanese", "日文", "jp": return "JP"
+        case "german", "德文", "de": return "DE"
+        case "french", "法文", "fr": return "FR"
+        case "spanish", "西文", "es": return "ES"
+        case "russian", "俄文", "ru": return "RU"
+        case "auto", "自动": return "AUTO"
+        default: return (StrLen(langName) > 0 ? StrUpper(SubStr(langName, 1, 4)) : "AUTO")
+    }
+}
+
 InitNativeChatGui() {
     global nativeChatGui, nativeEditBox, nativePrefixText, nativeProgressBar, hDarkBrush
 
@@ -34,9 +48,10 @@ InitNativeChatGui() {
     ; 左侧绝地黄 (Helldivers Gold #FFC800) 4px 纵向高亮边条
     nativeProgressBar := nativeChatGui.AddProgress("x0 y0 w4 h58 BackgroundFFC800")
 
-    ; 左侧图标与前缀 (w135 宽度充裕, 彻底避免 "💬 [翻译中...]" 截断)
+    ; 左侧图标与前缀 (动态响应源语言配置)
+    srcTag := GetLangTag(AppConfig.SourceLanguage)
     nativeChatGui.SetFont("s15 Bold cFFC800", "Microsoft YaHei")
-    nativePrefixText := nativeChatGui.AddText("x14 y11 w135 h36 +0x200", "💬 [中]")
+    nativePrefixText := nativeChatGui.AddText("x14 y11 w135 h36 +0x200", "💬 [" srcTag "]")
 
     ; 动态输入框 (从 x155 开始, 留出 6px 安全间隔, 彻底解决文字重叠)
     nativeChatGui.SetFont("s16 Bold cFFFFFF", "Microsoft YaHei")
@@ -68,9 +83,10 @@ InitNativeTransGui() {
     ; 左侧淡蓝 (Translation Blue #4A9EFF) 4px 纵向高亮边条
     nativeTransProgressBar := nativeTransGui.AddProgress("x0 y0 w4 h58 Background4A9EFF")
 
-    ; 前缀标签
+    ; 前缀标签 (动态响应目标语言配置)
+    targetTag := GetLangTag(AppConfig.TargetLanguage)
     nativeTransGui.SetFont("s15 Bold c4A9EFF", "Microsoft YaHei")
-    nativeTransPrefix := nativeTransGui.AddText("x14 y11 w135 h36 +0x200", "🌐 [EN]")
+    nativeTransPrefix := nativeTransGui.AddText("x14 y11 w135 h36 +0x200", "🌐 [" targetTag "]")
 
     ; 只读译文框 (与原文框同布局, +ReadOnly 防误编辑)
     nativeTransGui.SetFont("s16 Bold cFFFFFF", "Microsoft YaHei")
@@ -85,10 +101,17 @@ InitNativeTransGui() {
     nativeTransGui.Show("x-9999 y-9999 w640 h58 NA")
 }
 
-Native_SetPrefixText(text) {
+Native_SetPrefixText(text := "") {
     global nativePrefixText
     if (nativePrefixText) {
-        try nativePrefixText.Value := text
+        try {
+            if (text = "") {
+                srcTag := GetLangTag(AppConfig.SourceLanguage)
+                nativePrefixText.Value := "💬 [" srcTag "]"
+            } else {
+                nativePrefixText.Value := text
+            }
+        }
     }
 }
 
@@ -227,7 +250,7 @@ Native_CalculateOverlayPos(offX, offY, w, h, &posX, &posY) {
 }
 
 Native_ShowChatGui() {
-    global nativeIsChatActive, nativeChatGui, nativeEditBox
+    global nativeIsChatActive, nativeChatGui, nativeEditBox, nativePrefixText
 
     if nativeIsChatActive
         return
@@ -243,6 +266,11 @@ Native_ShowChatGui() {
     WriteLog("[Gui.Native] 显示原生悬浮窗: x=" posX " y=" posY " w=" w " h=" h)
 
     Native_UpdateOverlayDimensions(w, h, AppConfig.FontSize)
+
+    ; 动态刷新源语言前缀标签
+    if (nativePrefixText)
+        nativePrefixText.Value := "💬 [" GetLangTag(AppConfig.SourceLanguage) "]"
+
     nativeChatGui.Show(Format("x{1} y{2} w{3} h{4}", posX, posY, w, h))
     WinSetTransparent(248, "ahk_id " nativeChatGui.Hwnd)
     WinActivate("ahk_id " nativeChatGui.Hwnd)
@@ -263,13 +291,17 @@ Native_ShowChatGui() {
 ; 显示译文框 (位于原文框正上方 TRANS_OVERLAY_GAP 间距)
 ; -------------------------------------------------------------
 Native_ShowTransGui(origX, origY, w, h) {
-    global nativeTransGui, nativeTransEdit, nativeTransVisible, TRANS_OVERLAY_GAP
+    global nativeTransGui, nativeTransEdit, nativeTransPrefix, nativeTransVisible, TRANS_OVERLAY_GAP
     if (!nativeTransGui)
         return
 
     transY := origY - h - TRANS_OVERLAY_GAP
     if (transY < 0)
         transY := 0
+
+    ; 动态刷新目标语言前缀标签
+    if (nativeTransPrefix)
+        nativeTransPrefix.Value := "🌐 [" GetLangTag(AppConfig.TargetLanguage) "]"
 
     nativeTransEdit.Value := ""
     nativeTransGui.Show(Format("x{1} y{2} w{3} h{4} NA", origX, transY, w, h))

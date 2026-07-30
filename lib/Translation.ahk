@@ -27,10 +27,10 @@ class OpenRouterClient {
             }
 
             if (http.Status != 200) {
-                return { success: false, error: this._ExtractErrorMessage(http.Status, http.ResponseText), models: [] }
+                return { success: false, error: this._ExtractErrorMessage(http.Status, this._GetUtf8Response(http)), models: [] }
             }
 
-            respText := http.ResponseText
+            respText := this._GetUtf8Response(http)
             models := this._ParseModelList(respText)
             
             return { success: true, error: "", models: models }
@@ -69,7 +69,7 @@ class OpenRouterClient {
             if (status == 200) {
                 return { success: true, latencyMs: latencyMs, error: "", status: 200 }
             } else {
-                errDetail := this._ExtractErrorMessage(status, http.ResponseText)
+                errDetail := this._ExtractErrorMessage(status, this._GetUtf8Response(http))
                 return { success: false, latencyMs: latencyMs, error: errDetail, status: status }
             }
         } catch Error as err {
@@ -80,7 +80,7 @@ class OpenRouterClient {
     ; -------------------------------------------------------------
     ; 翻译文本 (POST /v1/chat/completions)
     ; -------------------------------------------------------------
-    static TranslateText(text, targetLang, apiBase, apiKey, model, glossaryHint := "") {
+    static TranslateText(text, targetLang, sourceLang, apiBase, apiKey, model, glossaryHint := "") {
         if (text = "")
             return { success: false, text: "", error: "输入文本为空" }
 
@@ -90,11 +90,14 @@ class OpenRouterClient {
             model := "google/gemini-2.5-flash"
         if (targetLang = "")
             targetLang := "English"
+        if (sourceLang = "")
+            sourceLang := "Auto"
 
         url := RegExReplace(apiBase, "/+$", "") "/chat/completions"
 
         ; 基础 System Prompt: HD2 游戏语气 + 术语约束
-        systemPrompt := "You are a fast game chat translator for Helldivers 2 (《绝地潜兵 2》). Translate the user text directly into " targetLang ". Keep it brief, natural, matching game tone and slang. Use official Helldivers 2 terminology (e.g. 虫族=Terminid, 机器人=Automaton, 撤离=extract, 战术配备=stratagem). Output ONLY the translated text without quotes or explanations."
+        srcDesc := (sourceLang != "" && StrLower(sourceLang) != "auto") ? ("from " sourceLang " ") : ""
+        systemPrompt := "You are a fast game chat translator for Helldivers 2 (《绝地潜兵 2》). Translate the user text " srcDesc "directly into " targetLang ". Keep it brief, natural, matching game tone and slang. Use official Helldivers 2 terminology (e.g. 虫族=Terminid, 机器人=Automaton, 撤离=extract, 战术配备=stratagem). Output ONLY the translated text without quotes or explanations."
 
         ; AC 自动机预扫描命中的当句术语动态注入
         if (glossaryHint != "")
@@ -123,10 +126,10 @@ class OpenRouterClient {
             }
 
             if (http.Status != 200) {
-                return { success: false, text: text, error: this._ExtractErrorMessage(http.Status, http.ResponseText) }
+                return { success: false, text: text, error: this._ExtractErrorMessage(http.Status, this._GetUtf8Response(http)) }
             }
 
-            respText := http.ResponseText
+            respText := this._GetUtf8Response(http)
             translated := this._ParseChatCompletionResponse(respText)
 
             if (translated = "")
@@ -135,6 +138,28 @@ class OpenRouterClient {
             return { success: true, text: translated, error: "" }
         } catch Error as err {
             return { success: false, text: text, error: "翻译网络异常: " err.Message }
+        }
+    }
+
+    ; -------------------------------------------------------------
+    ; 从 WinHttp 响应的 ResponseBody 二进制流中安全解码 UTF-8 文本
+    ; -------------------------------------------------------------
+    static _GetUtf8Response(http) {
+        try {
+            sa := ComObjValue(http.ResponseBody)
+            pData := 0
+            if (DllCall("oleaut32\SafeArrayAccessData", "Ptr", sa, "Ptr*", &pData) == 0) {
+                size := http.ResponseBody.MaxIndex() + 1
+                str := StrGet(pData, size, "UTF-8")
+                DllCall("oleaut32\SafeArrayUnaccessData", "Ptr", sa)
+                return str
+            }
+        } catch {
+        }
+        try {
+            return http.ResponseText
+        } catch {
+            return ""
         }
     }
 
