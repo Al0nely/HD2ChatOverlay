@@ -3,6 +3,23 @@
 ListLines 0
 KeyHistory 0
 
+
+
+; -------------------------------------------------------------
+; 🛡️ 管理员权限自动提升 (解决游戏独占窗口 UIPI 拦截 Enter 无响应问题)
+; -------------------------------------------------------------
+if (!A_IsAdmin) {
+    try {
+        if (A_IsCompiled)
+            Run('*RunAs "' A_ScriptFullpath '"')
+        else
+            Run('*RunAs "' A_AhkPath '" "' A_ScriptFullpath '"')
+    } catch {
+        MsgBox("以管理员身份运行失败，在游戏独占全屏下按键响应可能受限。`n建议右键可执行文件选择『以管理员身份运行』。", "HD2 Chat Overlay", "Icon!")
+    }
+    ExitApp()
+}
+
 ; -------------------------------------------------------------
 ; HD2 Chat Overlay - 主入口
 ; 版本: 1.4.0
