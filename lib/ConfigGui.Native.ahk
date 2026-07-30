@@ -48,7 +48,12 @@ Native_ShowConfigGui() {
             g_cfgChkAutoTranslate.Value := AppConfig.EnableAutoTranslate
             g_cfgEditApiBase.Value := AppConfig.ApiBase
             g_cfgEditApiKey.Value := AppConfig.ApiKey
-            g_cfgCbbModel.Text := AppConfig.Model
+            if (g_cfgCbbModel) {
+                g_cfgCbbModel.Delete()
+                savedModels := Native_GetModelList()
+                g_cfgCbbModel.Add(savedModels)
+                g_cfgCbbModel.Text := AppConfig.Model
+            }
             g_cfgDdlTargetLang.Text := AppConfig.TargetLanguage
             g_cfgChkGlossary.Value := AppConfig.EnableGlossary
             g_cfgChkEnablePythonScraper.Value := AppConfig.EnablePythonScraper
@@ -119,7 +124,7 @@ Native_ShowConfigGui() {
     nativeConfigGui.AddText("xm w460", "3. 🤖 AI 翻译设置 (OpenRouter / OpenAI 格式)")
     nativeConfigGui.SetFont("s10 cFFFFFF")
 
-    g_cfgChkAutoTranslate := nativeConfigGui.AddCheckbox("xm+15 w440 Checked" (AppConfig.EnableAutoTranslate ? 1 : 0), "开启翻译双悬浮框 (Ctrl+T 翻译, Ctrl+Tab 切换注入源)")
+    g_cfgChkAutoTranslate := nativeConfigGui.AddCheckbox("xm+15 w440 Checked" (AppConfig.EnableAutoTranslate ? 1 : 0), "开启翻译双悬浮框 (Alt+T 翻译, Ctrl+Tab 切换注入源)")
 
     nativeConfigGui.AddText("xm+15 w115 +0x200", "API Base:")
     g_cfgEditApiBase := nativeConfigGui.AddEdit("x+5 w320 c000000", AppConfig.ApiBase)
@@ -136,8 +141,8 @@ Native_ShowConfigGui() {
     g_cfgDdlTargetLang.Text := AppConfig.TargetLanguage
 
     nativeConfigGui.AddText("xm+15 w115 +0x200", "模型选择:")
-    presetModels := ["google/gemini-2.5-flash", "deepseek/deepseek-chat", "openai/gpt-4o-mini", "qwen/qwen-2.5-72b-instruct"]
-    g_cfgCbbModel := nativeConfigGui.AddComboBox("x+5 w320 c000000", presetModels)
+    savedModels := Native_GetModelList()
+    g_cfgCbbModel := nativeConfigGui.AddComboBox("x+5 w320 c000000", savedModels)
     g_cfgCbbModel.Text := AppConfig.Model
 
     ; API 验证/拉取状态提示文本
@@ -271,13 +276,36 @@ _Native_FetchModelList(btnObj, *) {
 
     if (res.success) {
         currentModel := g_cfgCbbModel.Text
+
+        ; 去重并过滤空项
+        cleanModels := []
+        seen := Map()
+        for m in res.models {
+            m := Trim(m)
+            if (m != "" && !seen.Has(m)) {
+                seen[m] := true
+                cleanModels.Push(m)
+            }
+        }
+
         g_cfgCbbModel.Delete()
-        g_cfgCbbModel.Add(res.models)
-        g_cfgCbbModel.Text := (currentModel != "") ? currentModel : res.models[1]
-        
+        g_cfgCbbModel.Add(cleanModels)
+
+        selectedModel := (currentModel != "") ? currentModel : (cleanModels.Length > 0 ? cleanModels[1] : "")
+        g_cfgCbbModel.Text := selectedModel
+
+        ; 拼接保存 ModelList 到 INI 持久化
+        modelListStr := ""
+        for idx, m in cleanModels {
+            modelListStr .= (idx == 1 ? "" : "|") . m
+        }
+        AppConfig.ModelList := modelListStr
+        AppConfig.Model := selectedModel
+        AppConfig.Save()
+
         g_cfgTxtApiStatus.SetFont("c00FF00")
-        g_cfgTxtApiStatus.Value := "✅ 已成功拉取 " res.models.Length " 个可用模型！"
-        MsgBox("✅ 成功拉取 " res.models.Length " 个可用模型！", "HD2 Chat Overlay", "Iconi")
+        g_cfgTxtApiStatus.Value := "✅ 已成功拉取并保存 " cleanModels.Length " 个可用模型！"
+        MsgBox("✅ 成功拉取并保存 " cleanModels.Length " 个可用模型到配置！", "HD2 Chat Overlay", "Iconi")
     } else {
         g_cfgTxtApiStatus.SetFont("cFF5555")
         g_cfgTxtApiStatus.Value := "❌ 拉取失败: " res.error
@@ -520,4 +548,36 @@ _OnHotkeyEnd(ih, targetType, btnCtrl, capturedKey) {
     ; 取消或未按键，还原原值
     origVal := (targetType = "translate") ? g_cfgTranslateKeyVal : g_cfgSwitchKeyVal
     btnCtrl.Text := Native_FormatHotkeyDisplay(origVal)
+}
+
+Native_GetModelList() {
+    models := []
+    if (AppConfig.ModelList != "") {
+        for m in StrSplit(AppConfig.ModelList, "|") {
+            m := Trim(m)
+            if (m != "") {
+                already := false
+                for ex in models {
+                    if (ex = m) {
+                        already := true
+                        break
+                    }
+                }
+                if (!already)
+                    models.Push(m)
+            }
+        }
+    }
+    if (AppConfig.Model != "") {
+        already := false
+        for ex in models {
+            if (ex = AppConfig.Model) {
+                already := true
+                break
+            }
+        }
+        if (!already)
+            models.Push(AppConfig.Model)
+    }
+    return models
 }
