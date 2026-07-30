@@ -2,6 +2,11 @@
 
 ## [1.2.0] - 2026-07-30
 
+### 🧹 彻底移除 WebView2 与架构简化
+- **回归纯 AHK 原生控件**: 彻底删除 WebView2 宿主 (`lib/WebView2Host.ahk`)、PowerShell HTTP 桥接 (`lib/WebView2Bridge.ps1`) 及 `ui/` 下所有 HTML/CSS/JS 前端资源。
+- **配置精简**: 彻底移除 `UseWebView2` 配置项与 `[Engine]` INI 节。
+- **零外部依赖**: 消除对 Edge Chromium Runtime 与 HTTP 本地桥接服务器的依赖，代码量精简 40%+，启动体验更轻量稳定。
+
 ### 🎨 黑金美学重构 & 原生控件独家优化
 - **《绝地潜兵 2》黑金沉浸 UI**: 深空暗黑背景 (`#0D0E12`) + 绝地黄发光边条 (`#FFC800`) + 纯白高亮文字 (`#FFFFFF`)。
 - **彻底消除 Win32 Edit 白框**: 拦截 `WM_CTLCOLOR` (`0x0133`/`0x0138`) 并正确匹配控件 `lParam` 句柄，无缝重绘 Edit 控件暗黑背景与纯白文字。

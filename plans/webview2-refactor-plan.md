@@ -1,5 +1,10 @@
 # HD2 Chat Overlay - WebView2 重构架构设计文档
 
+> **⚠️ 已废弃**: 该计划已被回退，WebView2 相关功能已从代码库中移除。
+> 项目当前采用纯 AHK 原生控件架构，详见 [`ahk-refactor-plan.md`](ahk-refactor-plan.md)。
+
+---
+
 ## 1. 背景与决策
 
 ### 1.1 现存问题

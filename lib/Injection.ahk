@@ -30,15 +30,9 @@ ReleaseModifiers() {
 ; 提交文本到游戏
 ; -------------------------------------------------------------
 SubmitText(*) {
-    global isChatActive, g_overlayHost
+    global isChatActive
     if !isChatActive
         return
-
-    ; WebView2 模式下: 触发 JS 执行 submitText() 逻辑
-    if (g_overlayHost) {
-        g_overlayHost.PostMessage('{"type":"executeSubmit"}')
-        return
-    }
 
     isChatActive := false
     rawText := Native_GetText()

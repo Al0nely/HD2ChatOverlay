@@ -5,8 +5,8 @@ KeyHistory 0
 
 ; -------------------------------------------------------------
 ; HD2 Chat Overlay - 主入口
-; 版本: 1.1.0
-; 功能: 《绝地潜兵 2》中文输入悬浮窗插件 (WebView2/原生双模式)
+; 版本: 1.2.0
+; 功能: 《绝地潜兵 2》中文输入悬浮窗插件 (原生模式)
 ; -------------------------------------------------------------
 
 ; 🎯 统一屏幕坐标系
@@ -18,7 +18,6 @@ CoordMode "Pixel", "Screen"
 ; -------------------------------------------------------------
 #Include %A_ScriptDir%\lib\Config.ahk
 #Include %A_ScriptDir%\lib\Utils.ahk
-#Include %A_ScriptDir%\lib\WebView2Host.ahk
 #Include %A_ScriptDir%\lib\Gui.Native.ahk
 #Include %A_ScriptDir%\lib\ConfigGui.Native.ahk
 #Include %A_ScriptDir%\lib\Gui.ahk
@@ -34,13 +33,6 @@ EnsureSingleInstance()
 SetProcessDpiAwareness()
 
 AppConfig.Load()
-
-; 检查 WebView2 是否应降级
-if (AppConfig.UseWebView2 && WebView2Host.ShouldFallback) {
-    AppConfig.UseWebView2 := false
-    AppConfig.Save()
-    WriteLog("[Main] WebView2 连续初始化失败,已自动降级到原生模式")
-}
 
 InitTrayMenu()
 InitChatGui()
@@ -65,7 +57,7 @@ ShellMessageCallback(wParam, lParam, *) {
 global overlayInvokedWindow := 0
 
 _ProcessShellEvent(activeHwnd) {
-    global lastActiveHwnd, isChatActive, isBoundToGame, lastShellEventTime, g_overlayHost, overlayInvokedWindow
+    global lastActiveHwnd, isChatActive, isBoundToGame, lastShellEventTime, overlayInvokedWindow
 
     ; 防抖: 50ms 内重复事件跳过
     now := A_TickCount
@@ -171,5 +163,5 @@ F9:: {
 ; -------------------------------------------------------------
 ; 启动完成
 ; -------------------------------------------------------------
-WriteLog("[Main] HD2 Chat Overlay v" SCRIPT_VERSION " 启动完成,引擎: " (AppConfig.UseWebView2 ? "WebView2" : "原生"))
+WriteLog("[Main] HD2 Chat Overlay v" SCRIPT_VERSION " 启动完成")
 TrayTip("HD2 Chat Overlay", "插件已在后台运行,按 Enter 唤醒输入框", 1)

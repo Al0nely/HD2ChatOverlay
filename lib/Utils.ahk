@@ -170,7 +170,7 @@ LimitGuiPos(targetHwnd, &posX, &posY, guiWidth := 0, guiHeight := 0) {
     if (guiWidth = 0)
         guiWidth := 510
     if (guiHeight = 0)
-        guiHeight := AppConfig.UseWebView2 ? 120 : 50
+        guiHeight := 50
 
     GetGameMonitorWorkArea(targetHwnd, &minX, &minY, &maxX, &maxY)
     if (posX < minX)

@@ -25,9 +25,6 @@ class AppConfig {
     ; 模式配置
     static GlobalTestMode := false
 
-    ; 引擎配置 (默认使用超快零延迟 Native 原生控件)
-    static UseWebView2 := false
-
     ; 从 INI 加载全部配置
     static Load() {
         this.OffsetX := this._ReadInt("Coordinates", "OffsetX", 840)
@@ -40,7 +37,6 @@ class AppConfig {
         this.OverlayWidth := this._ReadInt("UI", "OverlayWidth", 640)
         this.OverlayHeight := this._ReadInt("UI", "OverlayHeight", 58)
         this.GlobalTestMode := this._ReadBool("Mode", "GlobalTestMode", false)
-        this.UseWebView2 := this._ReadBool("Engine", "UseWebView2", false)
     }
 
     ; 保存全部配置到 INI (自动备份)
@@ -58,7 +54,6 @@ class AppConfig {
             IniWrite(String(this.OverlayWidth), this.iniPath, "UI", "OverlayWidth")
             IniWrite(String(this.OverlayHeight), this.iniPath, "UI", "OverlayHeight")
             IniWrite(this.GlobalTestMode ? "1" : "0", this.iniPath, "Mode", "GlobalTestMode")
-            IniWrite(this.UseWebView2 ? "1" : "0", this.iniPath, "Engine", "UseWebView2")
         } catch Error as err {
             WriteLog("[Config] 保存失败: " err.Message)
         }
@@ -76,7 +71,6 @@ class AppConfig {
         this.OverlayWidth := 640
         this.OverlayHeight := 58
         this.GlobalTestMode := false
-        this.UseWebView2 := false
     }
 
     ; 创建配置备份 (滚动保留最近 N 份)

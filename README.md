@@ -54,9 +54,6 @@ OverlayHeight=58   ; 悬浮窗高度
 
 [Mode]
 GlobalTestMode=1  ; 1=全局测试模式(任意窗口可唤醒), 0=仅游戏内
-
-[Engine]
-UseWebView2=0     ; 0=原生 AHK 超快零延迟引擎(默认), 1=WebView2 引擎
 ```
 
 ## 运行方式
@@ -70,10 +67,9 @@ UseWebView2=0     ; 0=原生 AHK 超快零延迟引擎(默认), 1=WebView2 引�
 
 ```
 hd2_chat.ahk               ; 主入口
-hd2_chat_native.ahk        ; 纯原生控件入口
 lib/
   Config.ahk               ; 配置管理与 INI 持久化
-  Gui.ahk                  ; 门面路由
+  Gui.ahk                  ; 原生悬浮窗门面
   Gui.Native.ahk           ; 原生黑金悬浮窗实现
   ConfigGui.Native.ahk     ; 原生配置窗口与 Live Preview 联动
   Injection.ahk            ; 帧同步文本注入与按键模拟
