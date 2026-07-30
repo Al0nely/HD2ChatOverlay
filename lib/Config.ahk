@@ -39,7 +39,7 @@ class AppConfig {
     static GlossaryLocalPath := A_ScriptDir "\assets\glossary.core.json"
 
     ; 快捷键配置 ([Hotkeys] 节, AHK 热键语法: ^=Ctrl !=Alt +=Shift)
-    static TranslateKey := "^t"
+    static TranslateKey := "!t"
     static SwitchSourceKey := "^Tab"
 
     ; 从 INI 加载全部配置
@@ -63,7 +63,7 @@ class AppConfig {
         this.EnablePythonScraper := this._ReadBool("Translation", "EnablePythonScraper", true)
         this.GlossaryUrl := this._ReadStr("Translation", "GlossaryUrl", "https://raw.githubusercontent.com/Al0nely/HD2ChatOverlay/main/assets/glossary.core.json")
         this.GlossaryLocalPath := this._ReadStr("Translation", "GlossaryLocalPath", A_ScriptDir "\assets\glossary.core.json")
-        this.TranslateKey := this._ReadStr("Hotkeys", "TranslateKey", "^t")
+        this.TranslateKey := this._ReadStr("Hotkeys", "TranslateKey", "!t")
         this.SwitchSourceKey := this._ReadStr("Hotkeys", "SwitchSourceKey", "^Tab")
     }
 
@@ -119,7 +119,7 @@ class AppConfig {
         this.EnablePythonScraper := true
         this.GlossaryUrl := "https://raw.githubusercontent.com/Al0nely/HD2ChatOverlay/main/assets/glossary.core.json"
         this.GlossaryLocalPath := A_ScriptDir "\assets\glossary.core.json"
-        this.TranslateKey := "^t"
+        this.TranslateKey := "!t"
         this.SwitchSourceKey := "^Tab"
     }
 

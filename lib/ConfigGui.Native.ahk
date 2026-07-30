@@ -16,14 +16,17 @@ global g_cfgTxtApiStatus := ""
 global g_cfgChkGlossary := ""
 global g_cfgChkEnablePythonScraper := ""
 global g_cfgTxtGlossaryStatus := ""
-global g_cfgEditTranslateKey := ""
-global g_cfgEditSwitchKey := ""
+global g_cfgTranslateKeyVal := ""
+global g_cfgSwitchKeyVal := ""
+global btnSetTranslateKey := ""
+global btnSetSwitchKey := ""
+global g_hotkeyRecorderIH := 0
 
 Native_ShowConfigGui() {
     global nativeConfigGui, isChatActive, nativeIsChatActive, nativeEditBox
     global g_cfgEditOffsetX, g_cfgEditOffsetY, g_cfgEditWidth, g_cfgEditHeight, g_cfgEditFontSize, g_cfgEditChunkDelay, g_cfgChkDebugLog
     global g_cfgChkAutoTranslate, g_cfgEditApiBase, g_cfgEditApiKey, g_cfgCbbModel, g_cfgDdlTargetLang, g_cfgTxtApiStatus
-    global g_cfgChkGlossary, g_cfgChkEnablePythonScraper, g_cfgTxtGlossaryStatus, g_cfgEditTranslateKey, g_cfgEditSwitchKey
+    global g_cfgChkGlossary, g_cfgChkEnablePythonScraper, g_cfgTxtGlossaryStatus, btnSetTranslateKey, btnSetSwitchKey, g_cfgTranslateKeyVal, g_cfgSwitchKeyVal
 
     ; 先将激活状态归零，确保 Native_ShowChatGui() 能正常弹窗展示
     isChatActive := false
@@ -48,8 +51,13 @@ Native_ShowConfigGui() {
             g_cfgCbbModel.Text := AppConfig.Model
             g_cfgDdlTargetLang.Text := AppConfig.TargetLanguage
             g_cfgChkGlossary.Value := AppConfig.EnableGlossary
-            g_cfgEditTranslateKey.Value := AppConfig.TranslateKey
-            g_cfgEditSwitchKey.Value := AppConfig.SwitchSourceKey
+            g_cfgChkEnablePythonScraper.Value := AppConfig.EnablePythonScraper
+            g_cfgTranslateKeyVal := AppConfig.TranslateKey
+            g_cfgSwitchKeyVal := AppConfig.SwitchSourceKey
+            if (btnSetTranslateKey)
+                btnSetTranslateKey.Text := Native_FormatHotkeyDisplay(AppConfig.TranslateKey)
+            if (btnSetSwitchKey)
+                btnSetSwitchKey.Text := Native_FormatHotkeyDisplay(AppConfig.SwitchSourceKey)
             if (g_cfgTxtApiStatus)
                 g_cfgTxtApiStatus.Value := ""
             if (g_cfgTxtGlossaryStatus)
@@ -147,16 +155,19 @@ Native_ShowConfigGui() {
 
     g_cfgTxtGlossaryStatus := nativeConfigGui.AddText("xm+15 w440 +0x200 cAAAAAA", Glossary.isLoaded ? ("词库: " Glossary.terms.Length " 词, 版本 " Glossary.version) : "词库未加载 (将使用内置核心库)")
 
-    ; 5. 快捷键自定义 (AHK 语法: ^=Ctrl !=Alt +=Shift)
+    ; 5. 快捷键自定义 (点击按键进入修改模式, 按下按键后按 Enter 确认)
     nativeConfigGui.SetFont("s11 Bold cFFC800")
-    nativeConfigGui.AddText("xm w460", "5. ⌨️ 快捷键自定义 (AHK 语法: ^=Ctrl !=Alt +=Shift)")
+    nativeConfigGui.AddText("xm w460", "5. ⌨️ 快捷键自定义 (点击按键进入修改模式)")
     nativeConfigGui.SetFont("s10 cFFFFFF")
 
-    nativeConfigGui.AddText("xm+15 w115 +0x200", "翻译快捷键:")
-    g_cfgEditTranslateKey := nativeConfigGui.AddEdit("x+5 w100 c000000", AppConfig.TranslateKey)
+    g_cfgTranslateKeyVal := AppConfig.TranslateKey
+    g_cfgSwitchKeyVal := AppConfig.SwitchSourceKey
 
-    nativeConfigGui.AddText("x+20 w115 +0x200", "切换注入源:")
-    g_cfgEditSwitchKey := nativeConfigGui.AddEdit("x+5 w100 c000000", AppConfig.SwitchSourceKey)
+    nativeConfigGui.AddText("xm+15 w100 +0x200", "翻译快捷键:")
+    btnSetTranslateKey := nativeConfigGui.AddButton("x+5 w320 h26", Native_FormatHotkeyDisplay(AppConfig.TranslateKey))
+
+    nativeConfigGui.AddText("xm+15 w100 +0x200", "切换注入源:")
+    btnSetSwitchKey := nativeConfigGui.AddButton("x+5 w320 h26", Native_FormatHotkeyDisplay(AppConfig.SwitchSourceKey))
 
     ; 6. 系统服务
     nativeConfigGui.SetFont("s11 Bold cFFC800")
@@ -186,6 +197,10 @@ Native_ShowConfigGui() {
     btnTestApi.OnEvent("Click", _Native_TestApiConnection)
     btnFetchModels.OnEvent("Click", _Native_FetchModelList)
     btnUpdateGlossary.OnEvent("Click", _Native_UpdateGlossary)
+
+    ; 快捷键捕获按钮事件
+    btnSetTranslateKey.OnEvent("Click", (*) => Native_StartHotkeyCapture("translate", btnSetTranslateKey))
+    btnSetSwitchKey.OnEvent("Click", (*) => Native_StartHotkeyCapture("switch", btnSetSwitchKey))
 
     ; 保存按钮
     btnSave.OnEvent("Click", _Native_SaveConfig)
@@ -351,7 +366,7 @@ _Native_UpdatePreview() {
 _Native_SaveConfig(*) {
     global nativeConfigGui, g_cfgEditOffsetX, g_cfgEditOffsetY, g_cfgEditWidth, g_cfgEditHeight, g_cfgEditFontSize, g_cfgEditChunkDelay, g_cfgChkDebugLog
     global g_cfgChkAutoTranslate, g_cfgEditApiBase, g_cfgEditApiKey, g_cfgCbbModel, g_cfgDdlTargetLang
-    global g_cfgChkGlossary, g_cfgChkEnablePythonScraper, g_cfgEditTranslateKey, g_cfgEditSwitchKey
+    global g_cfgChkGlossary, g_cfgChkEnablePythonScraper, g_cfgTranslateKeyVal, g_cfgSwitchKeyVal
 
     AppConfig.OffsetX := Integer(g_cfgEditOffsetX.Value)
     AppConfig.OffsetY := Integer(g_cfgEditOffsetY.Value)
@@ -368,8 +383,8 @@ _Native_SaveConfig(*) {
     AppConfig.TargetLanguage := g_cfgDdlTargetLang.Text
     AppConfig.EnableGlossary := g_cfgChkGlossary.Value
     AppConfig.EnablePythonScraper := g_cfgChkEnablePythonScraper.Value
-    AppConfig.TranslateKey := Trim(g_cfgEditTranslateKey.Value)
-    AppConfig.SwitchSourceKey := Trim(g_cfgEditSwitchKey.Value)
+    AppConfig.TranslateKey := Trim(g_cfgTranslateKeyVal)
+    AppConfig.SwitchSourceKey := Trim(g_cfgSwitchKeyVal)
 
     AppConfig.Save()
     WriteLog("[Config] 配置已保存 (含 AI 翻译/术语库/快捷键配置)")
@@ -388,7 +403,7 @@ _Native_CloseConfig(*) {
 _Native_ResetConfig(*) {
     global g_cfgEditOffsetX, g_cfgEditOffsetY, g_cfgEditWidth, g_cfgEditHeight, g_cfgEditFontSize, g_cfgEditChunkDelay, g_cfgChkDebugLog
     global g_cfgChkAutoTranslate, g_cfgEditApiBase, g_cfgEditApiKey, g_cfgCbbModel, g_cfgDdlTargetLang
-    global g_cfgChkGlossary, g_cfgChkEnablePythonScraper, g_cfgEditTranslateKey, g_cfgEditSwitchKey
+    global g_cfgChkGlossary, g_cfgChkEnablePythonScraper, btnSetTranslateKey, btnSetSwitchKey, g_cfgTranslateKeyVal, g_cfgSwitchKeyVal
 
     AppConfig.ResetDefaults()
     g_cfgEditOffsetX.Value := AppConfig.OffsetX
@@ -406,8 +421,103 @@ _Native_ResetConfig(*) {
     g_cfgDdlTargetLang.Text := AppConfig.TargetLanguage
     g_cfgChkGlossary.Value := AppConfig.EnableGlossary
     g_cfgChkEnablePythonScraper.Value := AppConfig.EnablePythonScraper
-    g_cfgEditTranslateKey.Value := AppConfig.TranslateKey
-    g_cfgEditSwitchKey.Value := AppConfig.SwitchSourceKey
+    g_cfgTranslateKeyVal := AppConfig.TranslateKey
+    g_cfgSwitchKeyVal := AppConfig.SwitchSourceKey
+    btnSetTranslateKey.Text := Native_FormatHotkeyDisplay(AppConfig.TranslateKey)
+    btnSetSwitchKey.Text := Native_FormatHotkeyDisplay(AppConfig.SwitchSourceKey)
 
     _Native_UpdatePreview()
+}
+
+Native_FormatHotkeyDisplay(ahkStr) {
+    if (ahkStr = "")
+        return "未设置 (点击修改)"
+    out := ""
+    str := ahkStr
+    if InStr(str, "^")
+        out .= "Ctrl + ", str := StrReplace(str, "^", "")
+    if InStr(str, "!")
+        out .= "Alt + ", str := StrReplace(str, "!", "")
+    if InStr(str, "+")
+        out .= "Shift + ", str := StrReplace(str, "+", "")
+    if InStr(str, "#")
+        out .= "Win + ", str := StrReplace(str, "#", "")
+    
+    if (StrLen(str) = 1)
+        out .= StrUpper(str)
+    else
+        out .= StrTitle(str)
+    return out
+}
+
+Native_StartHotkeyCapture(targetType, btnCtrl) {
+    global g_hotkeyRecorderIH, g_cfgTranslateKeyVal, g_cfgSwitchKeyVal, nativeConfigGui
+
+    if (g_hotkeyRecorderIH && g_hotkeyRecorderIH.InProgress) {
+        try g_hotkeyRecorderIH.Stop()
+    }
+
+    capturedKey := ""
+    btnCtrl.Text := "⏳ 请按下按键... (按 Enter 确认修改)"
+
+    ih := InputHook("B V I1", "{Enter}{NumpadEnter}{Escape}")
+    g_hotkeyRecorderIH := ih
+
+    ih.OnKeyDown := (ih, vk, sc) => _OnHotkeyKeyDown(ih, vk, sc, btnCtrl, &capturedKey)
+    ih.OnEnd := (ih) => _OnHotkeyEnd(ih, targetType, btnCtrl, capturedKey)
+    
+    ih.Start()
+}
+
+_OnHotkeyKeyDown(ih, vk, sc, btnCtrl, &capturedKey) {
+    keyName := GetKeyName(Format("vk{:x}sc{:x}", vk, sc))
+    if (!keyName)
+        return
+
+    ; 忽略单独按下的修饰键
+    if (keyName = "Control" || keyName = "LControl" || keyName = "RControl"
+     || keyName = "Alt" || keyName = "LAlt" || keyName = "RAlt"
+     || keyName = "Shift" || keyName = "LShift" || keyName = "RShift"
+     || keyName = "LWin" || keyName = "RWin") {
+        return
+    }
+
+    ; 屏蔽 Enter / Escape 作为普通捕获键 (留作确认/取消)
+    if (keyName = "Enter" || keyName = "NumpadEnter" || keyName = "Escape")
+        return
+
+    mods := ""
+    if GetKeyState("Control")
+        mods .= "^"
+    if GetKeyState("Alt")
+        mods .= "!"
+    if GetKeyState("Shift")
+        mods .= "+"
+    if GetKeyState("LWin") || GetKeyState("RWin")
+        mods .= "#"
+
+    formattedName := (StrLen(keyName) = 1) ? StrLower(keyName) : keyName
+    capturedKey := mods . formattedName
+
+    btnCtrl.Text := "按下: " Native_FormatHotkeyDisplay(capturedKey) " (按 Enter 完成修改)"
+}
+
+_OnHotkeyEnd(ih, targetType, btnCtrl, capturedKey) {
+    global g_cfgTranslateKeyVal, g_cfgSwitchKeyVal
+
+    if (ih.EndReason = "EndKey" && (ih.EndKey = "Enter" || ih.EndKey = "NumpadEnter")) {
+        if (capturedKey != "") {
+            if (targetType = "translate")
+                g_cfgTranslateKeyVal := capturedKey
+            else if (targetType = "switch")
+                g_cfgSwitchKeyVal := capturedKey
+
+            btnCtrl.Text := Native_FormatHotkeyDisplay(capturedKey)
+            return
+        }
+    }
+
+    ; 取消或未按键，还原原值
+    origVal := (targetType = "translate") ? g_cfgTranslateKeyVal : g_cfgSwitchKeyVal
+    btnCtrl.Text := Native_FormatHotkeyDisplay(origVal)
 }
