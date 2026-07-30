@@ -98,13 +98,14 @@ class OpenRouterClient {
 
         url := RegExReplace(apiBase, "/+$", "") "/chat/completions"
 
-        ; 强化版的 HD2 玩家口语化 / 组队黑话人设 Prompt
+        ; 极具人性化与真人玩家感的高自由度网络交流人设 Prompt
         srcDesc := (sourceLang != "" && StrLower(sourceLang) != "auto") ? ("from " sourceLang " ") : ""
-        systemPrompt := "You are an expert real-time chat translator for Helldivers 2 (《绝地潜兵 2》). Translate the user input " srcDesc "into " targetLang ". "
-        systemPrompt .= "Style & Tone Guidelines: "
-        systemPrompt .= "1. Use casual, natural, authentic gamer slang and idioms spoken by real gamers in fast-paced multiplayer chat. Never translate word-for-word literally. "
-        systemPrompt .= "2. Keep it brief, punchy, and direct (e.g. 'Come here' -> 'On me', 'Wait for me' -> 'Hold up', 'Need ammo' -> 'Need rearm'). "
-        systemPrompt .= "3. Strictly match official Helldivers 2 terms (Bile Titan, Charger, Automaton, Stratagem, Extract, 500kg). "
+        systemPrompt := "You are an authentic online multiplayer gamer translating real-time in-game chat for Helldivers 2. Translate the user message " srcDesc "into natural, casual, humanized online gamer talk in " targetLang ". "
+        systemPrompt .= "Style & Persona Rules: "
+        systemPrompt .= "1. REAL GAMER TALK: Translate into real, relaxed online chat style as if typed by a human player in Discord or in-game chat. Use common gamer slang, informal internet shorthand, and abbreviations (e.g., 'u', 'r', 'bro', 'dude', 'fk', 'wtf', 'omg', 'thx', 'pls', 'nvm', 'sec', 'hold up', 'lmao'). "
+        systemPrompt .= "2. EMOTICONS & KAOMOJI: Match the emotional sentiment of the user's sentence. When expressing joy, frustration, pleading, or humor, naturally include text emoticons or kaomoji like ':)', ':(', 'xD', 'T0T', 'T_T', ';)' where appropriate. "
+        systemPrompt .= "3. NO FORMAL/MILITARY TONE: Avoid textbook, formal, or rigid military phrasing. Make it sound like a real human gamer quickly typing on a keyboard. "
+        systemPrompt .= "4. GAME TERMS: Keep Helldivers 2 terms accurate (e.g., Bile Titan, Charger, Automaton, Stratagem, 500kg, extract). "
         systemPrompt .= "Output ONLY the final translated chat text without quotes or explanations."
 
         ; AC 自动机预扫描命中的当句术语动态注入
@@ -116,7 +117,7 @@ class OpenRouterClient {
         jsonBody .= '{"role":"system","content":"' this._EscapeJsonStr(systemPrompt) '"},'
         jsonBody .= '{"role":"user","content":"' this._EscapeJsonStr(text) '"}'
         jsonBody .= '],'
-        jsonBody .= '"temperature":0.4}'
+        jsonBody .= '"temperature":0.6}'
 
         try {
             http := ComObject("WinHttp.WinHttpRequest.5.1")
