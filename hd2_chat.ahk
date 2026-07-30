@@ -18,6 +18,7 @@ CoordMode "Pixel", "Screen"
 ; -------------------------------------------------------------
 #Include %A_ScriptDir%\lib\Config.ahk
 #Include %A_ScriptDir%\lib\Utils.ahk
+#Include %A_ScriptDir%\lib\Translation.ahk
 #Include %A_ScriptDir%\lib\Gui.Native.ahk
 #Include %A_ScriptDir%\lib\ConfigGui.Native.ahk
 #Include %A_ScriptDir%\lib\Gui.ahk
@@ -121,11 +122,13 @@ $~$NumpadEnter:: {
 
 #HotIf
 
-; 悬浮窗激活时: Enter 提交, Esc 取消, 滚轮转发, 位置调整
+; 悬浮窗激活时: Enter 提交, Ctrl+Enter 翻译提交, Esc 取消, 滚轮转发, 位置调整
 #HotIf isChatActive || WinActive("ahk_id " GetChatGuiHwnd())
 
-Enter:: SubmitText()
-NumpadEnter:: SubmitText()
+Enter:: SubmitText(false)
+NumpadEnter:: SubmitText(false)
+^Enter:: SubmitText(true)
+^NumpadEnter:: SubmitText(true)
 Escape:: CloseGui(true)
 
 WheelUp:: ForwardScrollToGame("WheelUp")

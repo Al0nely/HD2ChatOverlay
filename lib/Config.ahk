@@ -25,6 +25,13 @@ class AppConfig {
     ; 模式配置
     static GlobalTestMode := false
 
+    ; AI 翻译配置
+    static EnableAutoTranslate := false
+    static ApiBase := "https://openrouter.ai/api/v1"
+    static ApiKey := ""
+    static Model := "google/gemini-2.5-flash"
+    static TargetLanguage := "English"
+
     ; 从 INI 加载全部配置
     static Load() {
         this.OffsetX := this._ReadInt("Coordinates", "OffsetX", 840)
@@ -37,6 +44,11 @@ class AppConfig {
         this.OverlayWidth := this._ReadInt("UI", "OverlayWidth", 640)
         this.OverlayHeight := this._ReadInt("UI", "OverlayHeight", 58)
         this.GlobalTestMode := this._ReadBool("Mode", "GlobalTestMode", false)
+        this.EnableAutoTranslate := this._ReadBool("Translation", "EnableAutoTranslate", false)
+        this.ApiBase := this._ReadStr("Translation", "ApiBase", "https://openrouter.ai/api/v1")
+        this.ApiKey := this._ReadStr("Translation", "ApiKey", "")
+        this.Model := this._ReadStr("Translation", "Model", "google/gemini-2.5-flash")
+        this.TargetLanguage := this._ReadStr("Translation", "TargetLanguage", "English")
     }
 
     ; 保存全部配置到 INI (自动备份)
@@ -54,6 +66,11 @@ class AppConfig {
             IniWrite(String(this.OverlayWidth), this.iniPath, "UI", "OverlayWidth")
             IniWrite(String(this.OverlayHeight), this.iniPath, "UI", "OverlayHeight")
             IniWrite(this.GlobalTestMode ? "1" : "0", this.iniPath, "Mode", "GlobalTestMode")
+            IniWrite(this.EnableAutoTranslate ? "1" : "0", this.iniPath, "Translation", "EnableAutoTranslate")
+            IniWrite(this.ApiBase, this.iniPath, "Translation", "ApiBase")
+            IniWrite(this.ApiKey, this.iniPath, "Translation", "ApiKey")
+            IniWrite(this.Model, this.iniPath, "Translation", "Model")
+            IniWrite(this.TargetLanguage, this.iniPath, "Translation", "TargetLanguage")
         } catch Error as err {
             WriteLog("[Config] 保存失败: " err.Message)
         }
@@ -71,6 +88,11 @@ class AppConfig {
         this.OverlayWidth := 640
         this.OverlayHeight := 58
         this.GlobalTestMode := false
+        this.EnableAutoTranslate := false
+        this.ApiBase := "https://openrouter.ai/api/v1"
+        this.ApiKey := ""
+        this.Model := "google/gemini-2.5-flash"
+        this.TargetLanguage := "English"
     }
 
     ; 创建配置备份 (滚动保留最近 N 份)

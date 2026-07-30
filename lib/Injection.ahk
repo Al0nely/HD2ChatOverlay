@@ -29,13 +29,30 @@ ReleaseModifiers() {
 ; -------------------------------------------------------------
 ; 提交文本到游戏
 ; -------------------------------------------------------------
-SubmitText(*) {
+SubmitText(forceTranslate := false) {
     global isChatActive
     if !isChatActive
         return
 
-    isChatActive := false
     rawText := Native_GetText()
+
+    ; 判断是否触发 AI 翻译 (强制触发 或 开启了自动翻译)
+    shouldTranslate := (forceTranslate || AppConfig.EnableAutoTranslate) && (rawText != "")
+
+    if (shouldTranslate) {
+        Native_SetPrefixText("💬 [翻译中...]")
+        res := OpenRouterClient.TranslateText(rawText, AppConfig.TargetLanguage, AppConfig.ApiBase, AppConfig.ApiKey, AppConfig.Model)
+        Native_SetPrefixText("💬 [中]")
+        if (res.success && res.text != "") {
+            rawText := res.text
+            WriteLog("[Translation] 译文结果: " rawText)
+        } else {
+            WriteLog("[Translation] 翻译失败/保留原文: " res.error)
+            TrayTip("AI 翻译失败", res.error " (将发送原文)", 2)
+        }
+    }
+
+    isChatActive := false
     Native_ClearText()
 
     HideGuiToOffscreen()

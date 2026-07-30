@@ -2,6 +2,13 @@
 
 ## [1.2.0] - 2026-07-30
 
+### 🤖 AI 游戏实时翻译 (OpenRouter / OpenAI 格式)
+- **OpenRouter & OpenAI 协议支持**: 接入 OpenRouter API 格式，支持配置自定义 ApiBase、ApiKey、模型与目标语言。
+- **在线模型列表动态拉取**: 配置面板新增 `🔄 拉取模型列表` 按钮，自动通过 `GET /v1/models` 获取中转平台所有可用模型。
+- **游戏口语化 Prompt 优化**: 针对《绝地潜兵 2》游戏术语（如撤离、泰坦、民主等）精调 System Prompt，兼顾超低延迟与自然表达。
+- **灵活热键控制**: 按 `Ctrl+Enter` 随时强制触发 AI 翻译发送，或开启自动翻译模式按 `Enter` 自动发送。
+- **实时状态反馈**: 翻译过程中悬浮窗显示 `💬 [翻译中...]`，翻译成功后自动注入译文。
+
 ### 🧹 彻底移除 WebView2 与架构简化
 - **回归纯 AHK 原生控件**: 彻底删除 WebView2 宿主 (`lib/WebView2Host.ahk`)、PowerShell HTTP 桥接 (`lib/WebView2Bridge.ps1`) 及 `ui/` 下所有 HTML/CSS/JS 前端资源。
 - **配置精简**: 彻底移除 `UseWebView2` 配置项与 `[Engine]` INI 节。

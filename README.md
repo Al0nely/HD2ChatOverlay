@@ -8,6 +8,11 @@
 - **Win32 Edit 控件独家无缝渲染**: 彻底拦截 `WM_CTLCOLOR` 消息，100% 消除刺眼 Win32 白框。
 - **100% 准确零吞字注入**: 放弃不稳定剪贴板，采用 15ms 帧同步逐字 Unicode 分发，完美匹配游戏 60-144 FPS 输入消息队列，告别乱码与吞字。
 - **完全遮盖原版聊天底栏**: `640px x 58px` 大容器与 `h44` 高度输入框，文字上下左右 100% 完整舒展展示，无任何笔画遮挡。
+- **AI 游戏实时翻译 (OpenRouter / OpenAI 格式)**:
+  - 接入 OpenRouter API 格式，支持自定义 API Base 与 Key。
+  - **一键在线在线拉取模型列表**: 在配置界面点击 "🔄 拉取模型列表" 自动在线读取中转平台可用模型。
+  - **智能游戏口语翻译**: 针对《绝地潜兵 2》游戏俚语优化 System Prompt，支持中英等多语言极速翻译。
+  - **按键精准触发**: `Ctrl+Enter` 随时强制触发翻译发送，或勾选“开启 Enter 自动翻译”。
 - **配置面板实时在屏预览 (Live Preview)**:
   - 打开配置菜单时，悬浮窗在屏幕上同步亮起呈现在原位置。
   - 随意微调 `OffsetX` / `OffsetY` / `Width` / `Height` / `FontSize` 或点击方向按钮，悬浮窗 0 延迟实时在屏滑动与放缩。
@@ -24,7 +29,8 @@
 
 | 按键 | 功能 |
 |------|------|
-| Enter / 小键盘 Enter | 唤醒悬浮窗 / 发送文本到游戏 |
+| Enter / 小键盘 Enter | 唤醒悬浮窗 / 发送文本到游戏 (若开启自动翻译则自动翻译) |
+| Ctrl + Enter | 强制触发 AI 翻译并发送译文到游戏 |
 | Esc | 取消输入并关闭悬浮窗 |
 | Ctrl + Alt + 方向键 | 微调悬浮窗位置（每次 5 像素，自动保存） |
 | Shift + 方向键 | 微调悬浮窗位置（每次 5 像素，自动保存） |
@@ -57,6 +63,13 @@ OverlayHeight=58   ; 悬浮窗高度
 
 [Mode]
 GlobalTestMode=1  ; 1=全局测试模式(任意窗口可唤醒), 0=仅游戏内
+
+[Translation]
+EnableAutoTranslate=0                    ; 1=Enter 自动翻译, 0=手动 Ctrl+Enter
+ApiBase=https://openrouter.ai/api/v1    ; OpenRouter / OpenAI 兼容接口地址
+ApiKey=sk-or-v1-xxxx                    ; 您的 API Key
+Model=google/gemini-2.5-flash           ; 默认推荐模型 (或 deepseek/deepseek-chat)
+TargetLanguage=English                   ; 目标翻译语言
 ```
 
 ## 运行方式
@@ -64,7 +77,7 @@ GlobalTestMode=1  ; 1=全局测试模式(任意窗口可唤醒), 0=仅游戏内
 1. 确保已安装 AutoHotkey v2.0+
 2. 双击运行 `hd2_chat.ahk`
 3. 启动《绝地潜兵 2》，在游戏内按 Enter 唤醒黑金悬浮框输入中文
-4. 按 Enter 即可精准逐字注入游戏
+4. 按 Enter 发送文本，或按 Ctrl+Enter 自动 AI 翻译后发送
 
 ## 项目结构
 
@@ -72,9 +85,10 @@ GlobalTestMode=1  ; 1=全局测试模式(任意窗口可唤醒), 0=仅游戏内
 hd2_chat.ahk               ; 主入口
 lib/
   Config.ahk               ; 配置管理与 INI 持久化
+  Translation.ahk          ; OpenRouter / OpenAI AI 翻译与在线模型拉取
   Gui.ahk                  ; 原生悬浮窗门面
   Gui.Native.ahk           ; 原生黑金悬浮窗实现
-  ConfigGui.Native.ahk     ; 原生配置窗口与 Live Preview 联动
+  ConfigGui.Native.ahk     ; 原生配置窗口与 Live Preview / AI 设置
   Injection.ahk            ; 帧同步文本注入与按键模拟
   Tray.ahk                 ; 系统托盘菜单
   Utils.ahk                ; 日志、IME、Win32、DPI 辅助

@@ -9,9 +9,16 @@ global g_cfgEditFontSize := ""
 global g_cfgEditChunkDelay := ""
 global g_cfgChkDebugLog := ""
 
+global g_cfgChkAutoTranslate := ""
+global g_cfgEditApiBase := ""
+global g_cfgEditApiKey := ""
+global g_cfgCbbModel := ""
+global g_cfgDdlTargetLang := ""
+
 Native_ShowConfigGui() {
     global nativeConfigGui, isChatActive, nativeIsChatActive, nativeEditBox
     global g_cfgEditOffsetX, g_cfgEditOffsetY, g_cfgEditWidth, g_cfgEditHeight, g_cfgEditFontSize, g_cfgEditChunkDelay, g_cfgChkDebugLog
+    global g_cfgChkAutoTranslate, g_cfgEditApiBase, g_cfgEditApiKey, g_cfgCbbModel, g_cfgDdlTargetLang
 
     ; 先将激活状态归零，确保 Native_ShowChatGui() 能正常弹窗展示
     isChatActive := false
@@ -30,6 +37,11 @@ Native_ShowConfigGui() {
             g_cfgEditFontSize.Value := AppConfig.FontSize
             g_cfgEditChunkDelay.Value := AppConfig.ChunkDelay
             g_cfgChkDebugLog.Value := AppConfig.EnableDebugLog
+            g_cfgChkAutoTranslate.Value := AppConfig.EnableAutoTranslate
+            g_cfgEditApiBase.Value := AppConfig.ApiBase
+            g_cfgEditApiKey.Value := AppConfig.ApiKey
+            g_cfgCbbModel.Text := AppConfig.Model
+            g_cfgDdlTargetLang.Text := AppConfig.TargetLanguage
             _Native_UpdatePreview()
         }
         nativeConfigGui.Show()
@@ -44,7 +56,7 @@ Native_ShowConfigGui() {
 
     ; 1. 窗口位置配置 (基于右下角 OffsetX / OffsetY)
     nativeConfigGui.SetFont("s11 Bold cFFC800")
-    nativeConfigGui.AddText("w400", "1. 悬浮窗位置偏移 (基于游戏右下角对齐)")
+    nativeConfigGui.AddText("w440", "1. 悬浮窗位置偏移 (基于游戏右下角对齐)")
     nativeConfigGui.SetFont("s10 cFFFFFF")
 
     nativeConfigGui.AddText("xm+15 w90", "OffsetX (X轴):")
@@ -63,7 +75,7 @@ Native_ShowConfigGui() {
 
     ; 2. 框体大小与尺寸配置
     nativeConfigGui.SetFont("s11 Bold cFFC800")
-    nativeConfigGui.AddText("xm w400", "2. 悬浮窗框体尺寸与字体")
+    nativeConfigGui.AddText("xm w440", "2. 悬浮窗框体尺寸与字体")
     nativeConfigGui.SetFont("s10 cFFFFFF")
 
     nativeConfigGui.AddText("xm+15 w90", "宽度 (Width):")
@@ -82,11 +94,39 @@ Native_ShowConfigGui() {
     g_cfgEditChunkDelay := nativeConfigGui.AddEdit("x+5 w70 Number", AppConfig.ChunkDelay)
     udChunkDelay := nativeConfigGui.AddUpDown("Range1-100", AppConfig.ChunkDelay)
 
-    ; 3. 调试配置
+    ; 3. AI 翻译设置 (OpenRouter / OpenAI 格式)
+    nativeConfigGui.SetFont("s11 Bold cFFC800")
+    nativeConfigGui.AddText("xm w440", "3. 🤖 AI 翻译设置 (OpenRouter / OpenAI 格式)")
+    nativeConfigGui.SetFont("s10 cFFFFFF")
+
+    g_cfgChkAutoTranslate := nativeConfigGui.AddCheckbox("xm+15 w410 Checked" (AppConfig.EnableAutoTranslate ? 1 : 0), "开启 Enter 自动翻译 (按 Ctrl+Enter 随时强制翻译)")
+
+    nativeConfigGui.AddText("xm+15 w90", "API Base:")
+    g_cfgEditApiBase := nativeConfigGui.AddEdit("x+5 w310", AppConfig.ApiBase)
+
+    nativeConfigGui.AddText("xm+15 w90", "API Key:")
+    g_cfgEditApiKey := nativeConfigGui.AddEdit("x+5 w310 Password*", AppConfig.ApiKey)
+
+    btnFetchModels := nativeConfigGui.AddButton("xm+15 w130 h26", "🔄 拉取模型列表")
+    nativeConfigGui.AddText("x+15 w70", "目标语言:")
+    
+    langList := ["English", "Chinese", "Japanese", "German", "French", "Spanish", "Russian"]
+    g_cfgDdlTargetLang := nativeConfigGui.AddDropDownList("x+5 w100", langList)
+    g_cfgDdlTargetLang.Text := AppConfig.TargetLanguage
+
+    nativeConfigGui.AddText("xm+15 w90", "模型选择:")
+    presetModels := ["google/gemini-2.5-flash", "deepseek/deepseek-chat", "openai/gpt-4o-mini", "qwen/qwen-2.5-72b-instruct"]
+    g_cfgCbbModel := nativeConfigGui.AddComboBox("x+5 w310", presetModels)
+    g_cfgCbbModel.Text := AppConfig.Model
+
+    ; 4. 调试配置
+    nativeConfigGui.SetFont("s11 Bold cFFC800")
+    nativeConfigGui.AddText("xm w440", "4. 系统服务")
+    nativeConfigGui.SetFont("s10 cFFFFFF")
     g_cfgChkDebugLog := nativeConfigGui.AddCheckbox("xm+15 w300 Checked" (AppConfig.EnableDebugLog ? 1 : 0), "启用调试日志")
 
     ; 底部控制按钮
-    btnSave := nativeConfigGui.AddButton("xm+20 w100 h32", "保存配置")
+    btnSave := nativeConfigGui.AddButton("xm+30 w100 h32", "保存配置")
     btnCancel := nativeConfigGui.AddButton("x+20 w100 h32", "取消")
     btnReset := nativeConfigGui.AddButton("x+20 w110 h32", "恢复默认")
 
@@ -103,6 +143,9 @@ Native_ShowConfigGui() {
     btnLeft.OnEvent("Click", (*) => (g_cfgEditOffsetX.Value := Integer(g_cfgEditOffsetX.Value) + 5, _Native_UpdatePreview()))
     btnRight.OnEvent("Click", (*) => (g_cfgEditOffsetX.Value := Integer(g_cfgEditOffsetX.Value) - 5, _Native_UpdatePreview()))
 
+    ; 拉取模型按钮
+    btnFetchModels.OnEvent("Click", _Native_FetchModelList)
+
     ; 保存按钮
     btnSave.OnEvent("Click", _Native_SaveConfig)
     btnCancel.OnEvent("Click", _Native_CloseConfig)
@@ -111,7 +154,27 @@ Native_ShowConfigGui() {
 
     ; 初始化位置刷新
     _Native_UpdatePreview()
-    nativeConfigGui.Show("w440 h420")
+    nativeConfigGui.Show("w470 h580")
+}
+
+_Native_FetchModelList(*) {
+    global g_cfgEditApiBase, g_cfgEditApiKey, g_cfgCbbModel
+
+    apiBase := g_cfgEditApiBase.Value
+    apiKey := g_cfgEditApiKey.Value
+
+    TrayTip("正在请求", "正在从中转平台拉取模型列表...", 1)
+    res := OpenRouterClient.FetchModelList(apiBase, apiKey)
+
+    if (res.success) {
+        currentModel := g_cfgCbbModel.Text
+        g_cfgCbbModel.Delete()
+        g_cfgCbbModel.Add(res.models)
+        g_cfgCbbModel.Text := (currentModel != "") ? currentModel : res.models[1]
+        TrayTip("拉取成功", "已成功拉取 " res.models.Length " 个可用模型！", 1)
+    } else {
+        MsgBox("拉取模型列表失败:`n" res.error, "HD2 Chat Overlay", "Icon!")
+    }
 }
 
 _Native_UpdatePreview() {
@@ -137,6 +200,7 @@ _Native_UpdatePreview() {
 
 _Native_SaveConfig(*) {
     global nativeConfigGui, g_cfgEditOffsetX, g_cfgEditOffsetY, g_cfgEditWidth, g_cfgEditHeight, g_cfgEditFontSize, g_cfgEditChunkDelay, g_cfgChkDebugLog
+    global g_cfgChkAutoTranslate, g_cfgEditApiBase, g_cfgEditApiKey, g_cfgCbbModel, g_cfgDdlTargetLang
 
     AppConfig.OffsetX := Integer(g_cfgEditOffsetX.Value)
     AppConfig.OffsetY := Integer(g_cfgEditOffsetY.Value)
@@ -146,8 +210,14 @@ _Native_SaveConfig(*) {
     AppConfig.ChunkDelay := Integer(g_cfgEditChunkDelay.Value)
     AppConfig.EnableDebugLog := g_cfgChkDebugLog.Value
 
+    AppConfig.EnableAutoTranslate := g_cfgChkAutoTranslate.Value
+    AppConfig.ApiBase := g_cfgEditApiBase.Value
+    AppConfig.ApiKey := g_cfgEditApiKey.Value
+    AppConfig.Model := g_cfgCbbModel.Text
+    AppConfig.TargetLanguage := g_cfgDdlTargetLang.Text
+
     AppConfig.Save()
-    WriteLog("[Config] 配置已保存 (原生模式)")
+    WriteLog("[Config] 配置已保存 (含 AI 翻译配置)")
 
     Native_HideGuiToOffscreen()
     nativeConfigGui.Hide()
@@ -161,6 +231,8 @@ _Native_CloseConfig(*) {
 
 _Native_ResetConfig(*) {
     global g_cfgEditOffsetX, g_cfgEditOffsetY, g_cfgEditWidth, g_cfgEditHeight, g_cfgEditFontSize, g_cfgEditChunkDelay, g_cfgChkDebugLog
+    global g_cfgChkAutoTranslate, g_cfgEditApiBase, g_cfgEditApiKey, g_cfgCbbModel, g_cfgDdlTargetLang
+
     AppConfig.ResetDefaults()
     g_cfgEditOffsetX.Value := AppConfig.OffsetX
     g_cfgEditOffsetY.Value := AppConfig.OffsetY
@@ -169,5 +241,12 @@ _Native_ResetConfig(*) {
     g_cfgEditFontSize.Value := AppConfig.FontSize
     g_cfgEditChunkDelay.Value := AppConfig.ChunkDelay
     g_cfgChkDebugLog.Value := AppConfig.EnableDebugLog
+
+    g_cfgChkAutoTranslate.Value := AppConfig.EnableAutoTranslate
+    g_cfgEditApiBase.Value := AppConfig.ApiBase
+    g_cfgEditApiKey.Value := AppConfig.ApiKey
+    g_cfgCbbModel.Text := AppConfig.Model
+    g_cfgDdlTargetLang.Text := AppConfig.TargetLanguage
+
     _Native_UpdatePreview()
 }

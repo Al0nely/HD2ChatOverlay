@@ -45,6 +45,13 @@ InitNativeChatGui() {
     OnMessage(0x0201, Native_WM_LBUTTONDOWN)
 }
 
+Native_SetPrefixText(text) {
+    global nativePrefixText
+    if (nativePrefixText) {
+        try nativePrefixText.Value := text
+    }
+}
+
 Native_WM_CTLCOLOR(wParam, lParam, msg, hwnd) {
     global nativeEditBox, nativePrefixText, hDarkBrush
     if (nativeEditBox && lParam == nativeEditBox.Hwnd) {
