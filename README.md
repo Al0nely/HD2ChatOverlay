@@ -30,7 +30,7 @@
 | 按键 | 功能 |
 |------|------|
 | Enter / 小键盘 Enter | 唤醒悬浮窗 / 将**当前选中框**文本发送到游戏 |
-| Ctrl + T | AI 翻译原文框文本，译文显示在上方译文框（原文保留） |
+| Alt + T | AI 翻译原文框文本，译文显示在上方译文框（原文保留） |
 | Ctrl + Tab | 在原文框 / 译文框之间切换注入源（选中框边条高亮） |
 | Esc | 取消输入并关闭悬浮窗 |
 | Ctrl + Alt + 方向键 | 微调悬浮窗位置（每次 5 像素，自动保存） |
@@ -40,7 +40,7 @@
 | F12 | 重载脚本（仅游戏内生效） |
 | F9 | 诊断热键：强制显示悬浮窗（用于测试） |
 
-> 翻译与切换注入源快捷键可在配置面板或 INI `[Hotkeys]` 节自定义（AHK 语法：`^`=Ctrl `!`=Alt `+`=Shift）。
+> 快捷键支持交互式设置：在配置面板中**点击快捷键按钮** ➔ 键盘直接按下任意组合键 ➔ 按 **Enter** 确认完成修改。
 
 ## 配置说明
 
@@ -74,21 +74,27 @@ ApiKey=sk-or-v1-xxxx                    ; 您的 API Key
 Model=google/gemini-2.5-flash           ; 默认推荐模型 (低延迟低成本)
 TargetLanguage=English                   ; 目标翻译语言
 EnableGlossary=1                         ; 1=启用术语库 AC 自动机预扫描
-GlossaryUrl=https://raw.githubusercontent.com/helldivers-2/json/main/glossary.json
+EnablePythonScraper=1                    ; 1=允许远端更新失败时自动调用本地 Python (Conda) 刷新/采集
+GlossaryUrl=https://raw.githubusercontent.com/Al0nely/HD2ChatOverlay/main/assets/glossary.core.json
 GlossaryLocalPath=assets\glossary.core.json
 
 [Hotkeys]
-TranslateKey=^t                          ; 翻译快捷键
-SwitchSourceKey=^Tab                     ; 切换注入源快捷键
+TranslateKey=!t                          ; 翻译快捷键 (默认 Alt+T)
+SwitchSourceKey=^Tab                     ; 切换注入源快捷键 (默认 Ctrl+Tab)
 ```
 
-## AI 翻译（双悬浮框）
+## AI 翻译与术语库
 
 1. 托盘菜单打开配置面板，勾选「开启翻译双悬浮框」，填入 API Base / Key，选择模型（默认 `google/gemini-2.5-flash`）。
-2. 游戏内按 Enter 唤醒后，在下方原文框输入中文，按 `Ctrl+T` 翻译，上方淡蓝译文框显示英文（原文保留）。
+2. 游戏内按 Enter 唤醒后，在下方原文框输入中文，按 `Alt+T` 翻译，上方淡蓝译文框显示英文（原文保留）。
 3. 按 `Ctrl+Tab` 切换注入源（选中框边条高亮：原文框绝地黄 / 译文框淡蓝），按 Enter 注入选中框内容；译文框为空时自动回退注入原文。
-4. 术语库：内置 44 条 HD2 核心黑话（虫族/机器人/撤离/战术配备等），AC 自动机预扫描当前句子并注入 Prompt 约束模型用词；配置面板「更新术语库」可从 CDN 热更新。
-5. 离线词库再生成（使用 Conda 隔离环境，避免污染主环境）：
+4. **HD2 游戏黑话词库 (137 词条 + 6 细分类)**：
+   - 包含绝地潜兵 2 全套飞鹰/轨道/重武器背包/炮台/机甲/虫族/机器人/武器投掷物与战场黑话。
+   - 支持高频中英文缩写混合捕获：`BT`, `AC`, `RR`, `QC`, `FS`, `re`, `mb`, `rdy`, `500`, `下头500`, `大红线`, `泡泡盾`, `牛`, `隐形虫`, `粉桶`, `鸡腿石` 等。
+   - 细分为 `enemy` (敌人)、`stratagem` (战术配备)、`weapon` (武器)、`resource` (资源)、`action` (战术动作)、`slang` (口癖黑话) 6 大类别。
+5. **CDN 热更新与失败诊断**：配置面板「🔄 更新术语库」从 GitHub 官方 Raw 仓库拉取最新词库；若远端网络不可达，界面弹窗将**明确指示具体失败的目标 URL 及错误原因**，并可勾选允许调用本地 Conda 环境自动刷新。
+6. **Conda 隔离环境配置（防止污染主 Python 环境）**：
+   - 使用项目根目录的 `environment.yml` 或手动创建 `hd2chat` 环境：
    ```bash
    conda create -n hd2chat python=3.11 -y
    conda activate hd2chat
