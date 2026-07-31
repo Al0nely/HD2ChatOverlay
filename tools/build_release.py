@@ -5,9 +5,8 @@ import zipfile
 def build():
     root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     ahk2exe = os.path.join(root_dir, "tools", "Ahk2Exe", "Ahk2Exe.exe")
-    ahk_base_uia = r"C:\Program Files\AutoHotkey\v2\AutoHotkey64_UIA.exe"
     ahk_base_std = r"C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe"
-    ahk_base = ahk_base_uia if os.path.exists(ahk_base_uia) else ahk_base_std
+    ahk_base = ahk_base_std
 
     main_script = os.path.join(root_dir, "hd2_chat.ahk")
     exe_output = os.path.join(root_dir, "HD2ChatOverlay.exe")
@@ -30,7 +29,7 @@ def build():
     # 压包到 release 目录
     release_dir = os.path.join(root_dir, "release")
     os.makedirs(release_dir, exist_ok=True)
-    zip_path = os.path.join(release_dir, "HD2ChatOverlay-v1.4.2.zip")
+    zip_path = os.path.join(release_dir, "HD2ChatOverlay-v1.4.3.zip")
 
     # 🔒 隐私安全隔离防御：严格禁止打包任何 .ini 配置文件及 API Key
     print(f"[Package] Creating release archive {zip_path} ...")

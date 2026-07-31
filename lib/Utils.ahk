@@ -254,13 +254,23 @@ global g_cachedGameHwnd := 0
 GetGameHwnd(forceRefresh := false) {
     global g_cachedGameHwnd
     if (forceRefresh || !g_cachedGameHwnd || !WinExist("ahk_id " g_cachedGameHwnd)) {
+        oldHwnd := g_cachedGameHwnd
         g_cachedGameHwnd := WinExist("ahk_exe helldivers2.exe")
-        WriteLog("[GameHwndCache] 刷新缓存: 0x" Format("{:X}", g_cachedGameHwnd))
+        if (g_cachedGameHwnd != oldHwnd) {
+            if (g_cachedGameHwnd)
+                WriteLog("[GameHwndCache] 捕获游戏窗口: 0x" Format("{:X}", g_cachedGameHwnd))
+            else
+                WriteLog("[GameHwndCache] 游戏窗口已关闭或重置")
+        }
     }
     return g_cachedGameHwnd
 }
 
 InvalidateGameHwndCache() {
     global g_cachedGameHwnd
-    g_cachedGameHwnd := 0
+    if (g_cachedGameHwnd != 0) {
+        g_cachedGameHwnd := 0
+        WriteLog("[GameHwndCache] 强制清空游戏窗口缓存")
+    }
 }
+

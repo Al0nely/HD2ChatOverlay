@@ -378,7 +378,7 @@ Native_SetGuiLayoutToChinese() {
     }
 }
 
-Native_HideGuiToOffscreen() {
+Native_HideGuiToOffscreen(activateGame := true) {
     global nativeChatGui, nativeIsChatActive
     nativeIsChatActive := false
     if (nativeChatGui) {
@@ -386,9 +386,11 @@ Native_HideGuiToOffscreen() {
         nativeChatGui.Hide()
     }
     Native_HideTransGui()
-    gameHwnd := GetGameHwnd()
-    if (gameHwnd && WinExist("ahk_id " gameHwnd)) {
-        try WinActivate("ahk_id " gameHwnd)
+    if (activateGame) {
+        gameHwnd := GetGameHwnd()
+        if (gameHwnd && WinExist("ahk_id " gameHwnd)) {
+            try WinActivate("ahk_id " gameHwnd)
+        }
     }
 }
 

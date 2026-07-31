@@ -14,7 +14,7 @@ class AppConfig {
     static ChunkDelay := 15
 
     ; 调试配置
-    static EnableDebugLog := true
+    static EnableDebugLog := false
 
     ; UI 配置
     static FontName := "SimHei"

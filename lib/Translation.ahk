@@ -136,17 +136,18 @@ class OpenRouterClient {
 
         try {
             http := ComObject("WinHttp.WinHttpRequest.5.1")
+            http.SetTimeouts(5000, 5000, 10000, 15000) ; 域名 5s, 连接 5s, 发送 10s, 接收 15s
             http.Open("POST", url, true)
             http.SetRequestHeader("Content-Type", "application/json; charset=utf-8")
-            http.SetRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) HD2ChatOverlay/1.3.0")
+            http.SetRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) HD2ChatOverlay/1.4.3")
             http.SetRequestHeader("HTTP-Referer", "https://github.com/HD2ChatOverlay")
             http.SetRequestHeader("X-Title", "HD2 Chat Overlay")
             if (apiKey != "")
                 http.SetRequestHeader("Authorization", "Bearer " apiKey)
 
             http.Send(jsonBody)
-            if !http.WaitForResponse(8) { ; 8 秒超时
-                return { success: false, text: text, error: "翻译请求超时 (8s)" }
+            if !http.WaitForResponse(15) { ; 15 秒超时
+                return { success: false, text: text, error: "翻译请求超时 (15s)，请检查网络或更换快速模型" }
             }
 
             if (http.Status != 200) {

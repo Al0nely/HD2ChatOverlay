@@ -427,13 +427,13 @@ _Native_SaveConfig(*) {
     WriteLog("[Config] 配置已保存 (含 AI 翻译/术语库/快捷键配置)")
     TrayTip("HD2 Chat Overlay", "配置已保存。快捷键变更将在重载脚本后生效 (游戏内按 F12)。", 1)
 
-    Native_HideGuiToOffscreen()
+    Native_HideGuiToOffscreen(false)
     nativeConfigGui.Hide()
 }
 
 _Native_CloseConfig(*) {
     global nativeConfigGui
-    Native_HideGuiToOffscreen()
+    Native_HideGuiToOffscreen(false)
     nativeConfigGui.Hide()
 }
 

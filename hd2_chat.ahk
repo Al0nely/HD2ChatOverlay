@@ -9,7 +9,7 @@ KeyHistory 0
 
 ; -------------------------------------------------------------
 ; HD2 Chat Overlay - 主入口
-; 版本: 1.4.1
+; 版本: 1.4.3
 ; 功能: 《绝地潜兵 2》中文输入悬浮窗插件 (原生模式)
 ; -------------------------------------------------------------
 
@@ -35,10 +35,10 @@ CoordMode "Pixel", "Screen"
 ; -------------------------------------------------------------
 EnsureSingleInstance()
 
+AppConfig.Load()
+
 ; 设置 DPI 感知 (必须在创建窗口前)
 SetProcessDpiAwareness()
-
-AppConfig.Load()
 
 ; 初始化术语库 (AC 自动机), 失败不阻塞主流程
 Glossary.Init()
@@ -66,7 +66,7 @@ RegisterTranslationHotkeys() {
 }
 
 ; -------------------------------------------------------------
-; ShellHook 窗口切换监听(带防抖)
+; ShellHook 窗口切换监听与焦点防抖
 ; -------------------------------------------------------------
 DllCall("RegisterShellHookWindow", "Ptr", A_ScriptHwnd)
 global shellMessageNum := DllCall("RegisterWindowMessage", "Str", "ShellHook")
@@ -77,27 +77,38 @@ global lastShellEventTime := 0
 global SHELL_DEBOUNCE_MS := 50
 
 ShellMessageCallback(wParam, lParam, *) {
-    if (wParam = 1 || wParam = 4 || wParam = 32769 || wParam = 32772) {
-        SetTimer(_ProcessShellEvent.Bind(lParam), -1)
+    ; 1=WINDOWCREATED, 2=WINDOWDESTROYED, 4=WINDOWACTIVATED, 32769=RUDEAPPACTIVATED, 32772=TASKMAN
+    if (wParam = 1 || wParam = 2 || wParam = 4 || wParam = 32769 || wParam = 32772) {
+        SetTimer(_ProcessShellEvent.Bind(lParam, wParam), -1)
     }
 }
 
 global overlayInvokedWindow := 0
 
-_ProcessShellEvent(activeHwnd) {
+_ProcessShellEvent(activeHwnd, eventType := 0) {
     global lastActiveHwnd, isChatActive, isBoundToGame, lastShellEventTime, overlayInvokedWindow
 
-    ; 防抖: 50ms 内重复事件跳过
-    now := A_TickCount
-    if (now - lastShellEventTime < SHELL_DEBOUNCE_MS)
-        return
-    lastShellEventTime := now
-
     gameHwnd := GetGameHwnd()
+
+    ; 窗口销毁事件 (wParam = 2): 若游戏进程/窗口销毁，及时重置缓存
+    if (eventType = 2) {
+        if (gameHwnd && activeHwnd == gameHwnd) {
+            InvalidateGameHwndCache()
+        }
+        return
+    }
+
     guiHwnd := GetChatGuiHwnd()
 
     if !activeHwnd || activeHwnd == guiHwnd || activeHwnd == overlayInvokedWindow
         return
+
+    ; 防抖: 目标为游戏窗口的切回事件始终优先处理；非游戏窗口事件 50ms 内重复跳过
+    now := A_TickCount
+    isTargetingGame := (gameHwnd && activeHwnd == gameHwnd)
+    if (!isTargetingGame && (now - lastShellEventTime < SHELL_DEBOUNCE_MS))
+        return
+    lastShellEventTime := now
 
     procName := ""
     activePid := 0
@@ -138,6 +149,27 @@ _ProcessShellEvent(activeHwnd) {
     }
     lastActiveHwnd := activeHwnd
 }
+
+; -------------------------------------------------------------
+; 焦点与 CapsLock 状态后台兜底监视器 (1秒轮询)
+; -------------------------------------------------------------
+SetTimer(CheckGameFocusWatchdog, 1000)
+
+CheckGameFocusWatchdog() {
+    gameHwnd := GetGameHwnd()
+    if (!gameHwnd || !WinExist("ahk_id " gameHwnd))
+        return
+
+    ; 当返回游戏且未开启 Overlay 输入框时，兜底确保 CapsLock 设为 On
+    if WinActive("ahk_id " gameHwnd) {
+        if (!isChatActive && !isAdjusting) {
+            if (!GetKeyState("CapsLock", "T")) {
+                DisableGameIME()
+            }
+        }
+    }
+}
+
 
 global g_ignoreEnterUntil := 0
 

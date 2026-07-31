@@ -1,6 +1,6 @@
 ; lib/Tray.ahk - 系统托盘菜单系统
 
-global SCRIPT_VERSION := "1.4.1"
+global SCRIPT_VERSION := "1.4.3"
 
 InitTrayMenu() {
     ; 清空默认菜单

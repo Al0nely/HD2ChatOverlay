@@ -81,13 +81,8 @@ ToggleInjectSource(*) {
 ; -------------------------------------------------------------
 ; 隐藏悬浮窗到离屏
 ; -------------------------------------------------------------
-HideGuiToOffscreen() {
-    Native_HideGuiToOffscreen()
-
-    gameHwnd := GetGameHwnd()
-    if gameHwnd {
-        try WinActivate("ahk_id " gameHwnd)
-    }
+HideGuiToOffscreen(activateGame := true) {
+    Native_HideGuiToOffscreen(activateGame)
 }
 
 CloseGui(sendEsc := false) {
