@@ -172,28 +172,12 @@ PgDn:: ForwardScrollToGame("WheelDown")
 ^!Right:: AdjustGuiPos(5, 0)
 ^!Up:: AdjustGuiPos(0, -5)
 ^!Down:: AdjustGuiPos(0, 5)
-
-+Left:: AdjustGuiPos(-5, 0)
-+Right:: AdjustGuiPos(5, 0)
-+Up:: AdjustGuiPos(0, -5)
-+Down:: AdjustGuiPos(0, 5)
-
-!Left:: AdjustGuiPos(-5, 0)
-!Right:: AdjustGuiPos(5, 0)
-!Up:: AdjustGuiPos(0, -5)
-!Down:: AdjustGuiPos(0, 5)
 #HotIf
 
 ; 游戏内 F12 重载
 #HotIf WinActive("ahk_exe helldivers2.exe")
 F12:: Reload()
 #HotIf
-
-; 诊断热键: F9 强制显示悬浮窗 (用于测试)
-F9:: {
-    WriteLog("[Main] F9 诊断热键触发")
-    ShowChatGui()
-}
 
 ; -------------------------------------------------------------
 ; 启动完成

@@ -41,9 +41,10 @@ InitNativeChatGui() {
     hDarkBrush := DllCall("CreateSolidBrush", "UInt", 0x00120E0D, "Ptr")
     DllCall("SetClassLongPtr", "Ptr", nativeChatGui.Hwnd, "Int", -10, "Ptr", hDarkBrush)
 
-    ; 拦截 Edit 和 Static 控件颜色绘制 (WM_CTLCOLOREDIT 0x0133 / WM_CTLCOLORSTATIC 0x0138)
+    ; 拦截 Edit 和 Static 控件颜色绘制 (WM_CTLCOLOREDIT 0x0133 / WM_CTLCOLORSTATIC 0x0138 / WM_ERASEBKGND 0x0014)
     OnMessage(0x0133, Native_WM_CTLCOLOR)
     OnMessage(0x0138, Native_WM_CTLCOLOR)
+    OnMessage(0x0014, Native_WM_ERASEBKGND)
 
     ; 左侧绝地黄 (Helldivers Gold #FFC800) 4px 纵向高亮边条
     nativeProgressBar := nativeChatGui.AddProgress("x0 y0 w4 h58 BackgroundFFC800")
@@ -51,12 +52,12 @@ InitNativeChatGui() {
     ; 左侧图标与前缀 (动态响应源语言配置)
     srcTag := GetLangTag(AppConfig.SourceLanguage)
     nativeChatGui.SetFont("s14 Bold cFFC800", "Microsoft YaHei")
-    nativePrefixText := nativeChatGui.AddText("x14 y11 w140 h36 +0x200", "💬 [" srcTag "]")
+    nativePrefixText := nativeChatGui.AddText("x14 y15 w140 h37 +0x200", "💬 [" srcTag "]")
 
-    ; 动态输入框 (从 x155 开始, editY 设为 14, editH 设为 38, 文本线中心为 y=28.5, 与左侧前缀中轴 y=29 完全平齐且防截断)
+    ; 动态输入框 (从 x155 开始, editY 设为 15, editH 设为 37, 与前缀框上下边缘 100% 对齐平齐)
     fontName := AppConfig.FontName != "" ? AppConfig.FontName : "Microsoft YaHei"
     nativeChatGui.SetFont("s16 Bold cFFFFFF", fontName)
-    nativeEditBox := nativeChatGui.AddEdit("x155 y14 w470 h38 -Border -E0x0200 cFFFFFF")
+    nativeEditBox := nativeChatGui.AddEdit("x155 y15 w470 h37 -Border -E0x0200 cFFFFFF")
     DllCall("SendMessage", "Ptr", nativeEditBox.Hwnd, "UInt", 0x00D3, "Ptr", 3, "Ptr", (6 & 0xFFFF) | ((6 & 0xFFFF) << 16))
 
     ; 禁用 DWM 窗口过渡动画
@@ -89,12 +90,12 @@ InitNativeTransGui() {
     ; 前缀标签 (动态响应目标语言配置)
     targetTag := GetLangTag(AppConfig.TargetLanguage)
     nativeTransGui.SetFont("s14 Bold c4A9EFF", "Microsoft YaHei")
-    nativeTransPrefix := nativeTransGui.AddText("x14 y11 w140 h36 +0x200", "🌐 [" targetTag "]")
+    nativeTransPrefix := nativeTransGui.AddText("x14 y15 w140 h37 +0x200", "🌐 [" targetTag "]")
 
     ; 只读译文框 (与原文框同布局, +ReadOnly 防误编辑)
     fontName := AppConfig.FontName != "" ? AppConfig.FontName : "Microsoft YaHei"
     nativeTransGui.SetFont("s16 Bold cFFFFFF", fontName)
-    nativeTransEdit := nativeTransGui.AddEdit("x155 y14 w470 h38 -Border -E0x0200 +ReadOnly cFFFFFF")
+    nativeTransEdit := nativeTransGui.AddEdit("x155 y15 w470 h37 -Border -E0x0200 +ReadOnly cFFFFFF")
     DllCall("SendMessage", "Ptr", nativeTransEdit.Hwnd, "UInt", 0x00D3, "Ptr", 3, "Ptr", (6 & 0xFFFF) | ((6 & 0xFFFF) << 16))
 
     ; 禁用 DWM 窗口过渡动画
@@ -145,6 +146,16 @@ Native_WM_CTLCOLOR(wParam, lParam, msg, hwnd) {
     }
 }
 
+Native_WM_ERASEBKGND(wParam, lParam, msg, hwnd) {
+    global nativeChatGui, nativeTransGui, hDarkBrush
+    if (hDarkBrush && (hwnd == nativeChatGui.Hwnd || (nativeTransGui && hwnd == nativeTransGui.Hwnd))) {
+        rc := Buffer(16, 0)
+        DllCall("GetClientRect", "Ptr", hwnd, "Ptr", rc)
+        DllCall("FillRect", "Ptr", wParam, "Ptr", rc, "Ptr", hDarkBrush)
+        return 1
+    }
+}
+
 Native_WM_LBUTTONDOWN(wParam, lParam, msg, hwnd) {
     global nativeChatGui, nativeEditBox
     if (hwnd == nativeChatGui.Hwnd && nativeEditBox) {
@@ -161,15 +172,6 @@ Native_UpdateOverlayDimensions(w, h, fontSz := 16) {
     if (nativeProgressBar)
         nativeProgressBar.Move(0, 0, 4, h)
 
-    ; 前缀 Label 垂直居中与尺寸重排
-    prefixH := 36
-    prefixY := (h > prefixH) ? (h - prefixH) // 2 : 0
-    if (nativePrefixText)
-        nativePrefixText.Move(14, prefixY, 140, prefixH)
-
-    ; Edit 输入框垂直居中与尺寸重排
-    ; Win32 单行 Edit 控件从顶端 (editY+1) 渲染文本。根据字号计算文本高度 textH，
-    ; 将文本顶部设于容器垂直中轴 (h - textH)//2 - 2，底部保留足够空间 (editH := h - editY - 6) 避免 _ 下划线截断。
     editX := 155
     editW := w - editX - 15
     if (editW < 100)
@@ -180,6 +182,10 @@ Native_UpdateOverlayDimensions(w, h, fontSz := 16) {
     editH := h - editY - 6
     if (editH < 20)
         editH := 20
+
+    ; 前缀 Label 垂直坐标与高度完全对齐 Edit 输入框，消灭上下边缘阶梯断层
+    if (nativePrefixText)
+        nativePrefixText.Move(14, editY, 140, editH)
 
     fontName := AppConfig.FontName != "" ? AppConfig.FontName : "Microsoft YaHei"
     nativeEditBox.SetFont("s" fontSz " Bold cFFFFFF", fontName)
@@ -202,11 +208,6 @@ Native_UpdateTransDimensions(w, h, fontSz := 16) {
     if (nativeTransProgressBar)
         nativeTransProgressBar.Move(0, 0, 4, h)
 
-    prefixH := 36
-    prefixY := (h > prefixH) ? (h - prefixH) // 2 : 0
-    if (nativeTransPrefix)
-        nativeTransPrefix.Move(14, prefixY, 140, prefixH)
-
     editX := 155
     editW := w - editX - 15
     if (editW < 100)
@@ -217,6 +218,9 @@ Native_UpdateTransDimensions(w, h, fontSz := 16) {
     editH := h - editY - 6
     if (editH < 20)
         editH := 20
+
+    if (nativeTransPrefix)
+        nativeTransPrefix.Move(14, editY, 140, editH)
 
     fontName := AppConfig.FontName != "" ? AppConfig.FontName : "Microsoft YaHei"
     nativeTransEdit.SetFont("s" fontSz " Bold cFFFFFF", fontName)

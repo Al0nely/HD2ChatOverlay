@@ -126,7 +126,7 @@ Native_ShowConfigGui() {
     nativeConfigGui.AddText("xm w460", "3. 🤖 AI 翻译设置 (OpenRouter / OpenAI 格式)")
     nativeConfigGui.SetFont("s10 cFFFFFF")
 
-    g_cfgChkAutoTranslate := nativeConfigGui.AddCheckbox("xm+15 w440 Checked" (AppConfig.EnableAutoTranslate ? 1 : 0), "开启翻译双悬浮框 (Alt+T 翻译, Ctrl+Tab 切换注入源)")
+    g_cfgChkAutoTranslate := nativeConfigGui.AddCheckbox("xm+15 w440 Checked" (AppConfig.EnableAutoTranslate ? 1 : 0), "开启翻译双悬浮框")
 
     nativeConfigGui.AddText("xm+15 w115 +0x200", "API Base:")
     g_cfgEditApiBase := nativeConfigGui.AddEdit("x+5 w320 c000000", AppConfig.ApiBase)
