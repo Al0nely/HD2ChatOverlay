@@ -197,8 +197,6 @@ Escape:: CloseGui(true)
 
 WheelUp:: ForwardScrollToGame("WheelUp")
 WheelDown:: ForwardScrollToGame("WheelDown")
-PgUp:: ForwardScrollToGame("WheelUp")
-PgDn:: ForwardScrollToGame("WheelDown")
 
 ^!Left:: AdjustGuiPos(-5, 0)
 ^!Right:: AdjustGuiPos(5, 0)
