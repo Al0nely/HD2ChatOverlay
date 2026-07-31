@@ -22,8 +22,9 @@
 ## 系统要求
 
 - Windows 10 1803+ / Windows 11
-- [AutoHotkey v2.0+](https://www.autohotkey.com/)
-- 无额外依赖
+- **运行 `.exe` 发布版**：无额外依赖，免安装 AutoHotkey / Python，解压双击即用
+- **运行 `.ahk` 源码版**：需要安装 [AutoHotkey v2.0+](https://www.autohotkey.com/)
+
 
 ## 快捷键
 
@@ -105,6 +106,25 @@ SwitchSourceKey=^Tab                     ; 切换注入源快捷键 (默认 Ctrl
 2. **源码运行**：确保安装 AutoHotkey v2.0+，双击运行 `hd2_chat.ahk`。
 3. 启动《绝地潜兵 2》，在游戏内按 Enter 唤醒黑金悬浮框输入中文。
 4. 按 Enter 发送文本；开启翻译后按 Alt+T 翻译、Ctrl+Tab 选择注入原文或译文。
+
+## 常见问题与环境兼容性 FAQ
+
+1. **游戏画面显示模式（无边框全屏）**：
+   - **强烈推荐**：在《绝地潜兵 2》游戏图像设置中将显示模式设置为**【无边框全屏】**或**【窗口化】**。
+   - **注意**：若强制设置为“独占全屏”（Exclusive Fullscreen），DirectX/Vulkan 独占渲染管道会绕过 Windows 桌面合成器，可能导致悬浮窗无法置顶显示或唤醒时引发窗口切出（Alt-Tab）。
+
+2. **多分辨率与位置微调 (1080P / 2K / 4K)**：
+   - 完美兼容 1080P、2K、4K 及超宽屏。悬浮窗基于屏幕/游戏窗口右下角计算相对坐标，并带有屏幕边界自动限制防溢出保护。
+   - 首次启动若位置与游戏原生聊天框有微小偏差，可在唤醒悬浮窗时按 `Ctrl + Alt + 方向键`（每次 5 像素）实时微调，微调结果会自动持久化保存。
+
+3. **游戏帧率 (FPS) 与打字稳定性**：
+   - 悬浮窗为原生 Win32 DWM 窗口，打字与响应始终维持系统级流畅，不受游戏帧率波动影响。
+   - 逐字 Unicode 注入默认设置了 15ms 帧间延迟（`ChunkDelay=15`）。若遇到极限低帧率（<20 FPS）游戏卡顿导致掉字，可在 `hd2_chat_settings.ini` 中将 `ChunkDelay` 调整为 `20`~`30` 毫秒。
+
+4. **黑话术语库与 Python 依赖**：
+   - 普通玩家**完全不需要安装 Python 或 Conda**。黑话词库基于纯 AHK 原生 AC 自动机算法构建，并通过 HTTP 协议在线热更新 JSON 资源。
+   - Python（`tools/glossary_scraper.py`）仅为开发者或高级用户的本地爬虫工具。
+
 
 ## 项目结构
 
