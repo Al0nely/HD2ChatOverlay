@@ -30,7 +30,7 @@ def build():
     # 压包到 release 目录
     release_dir = os.path.join(root_dir, "release")
     os.makedirs(release_dir, exist_ok=True)
-    zip_path = os.path.join(release_dir, "HD2ChatOverlay-v1.4.1.zip")
+    zip_path = os.path.join(release_dir, "HD2ChatOverlay-v1.4.2.zip")
 
     # 🔒 隐私安全隔离防御：严格禁止打包任何 .ini 配置文件及 API Key
     print(f"[Package] Creating release archive {zip_path} ...")
