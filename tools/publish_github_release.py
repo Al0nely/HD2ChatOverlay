@@ -24,22 +24,24 @@ def main():
         sys.exit(1)
 
     repo = "Al0nely/HD2ChatOverlay"
-    tag = "v1.4.1"
-    release_name = "HD2 Chat Overlay v1.4.1 - 悬浮框文字对齐与偶发响应迟钝 Bug 修复"
+    tag = "v1.4.2"
+    release_name = "HD2 Chat Overlay v1.4.2 - 悬浮框前缀无缝平齐对齐与文档全量核实"
 
-    body = """# HD2 Chat Overlay v1.4.1 正式发布
+    body = """# HD2 Chat Overlay v1.4.2 正式发布
 
-### 🐛 Bug 修复与排版优化
-- **悬浮框文字垂直居中与防截断算法**：动态适配字体尺寸，文字中轴与前缀标签中轴完美平齐，留出充足的底部下沉空间，彻底解决 `_` 下划线被边缘遮挡或文字偏高问题。
-- **悬浮框偶发响应迟钝修复**：优化 ShellHook 监听逻辑，自动识别排除本程序多窗口与 IME 输入法事件，彻底杜绝悬浮窗被误关闭或 Enter 按键响应不及时。
-- **翻译等待提示优化**：请求翻译时的悬浮框前缀由 `💬 [译中]` 优化为 `⏳ [译]`，避免右括号 `]` 截断并提供清晰等待反馈。
-- **稳定性增强**：修复 Win32 属性调用顺序及多处交互边界细节。
+### 🎨 悬浮框排版平齐与 README 全面核实
+- **悬浮框前缀与输入框平齐无缝对齐**：前缀 Static 控件（`💬 [自]` / `🌐 [英]`）Y 坐标与 Height 高度同步设为与 Edit 输入框完全相同的 `editY` 与 `editH`，消灭上下边缘 4~5px 的阶梯凹凸切口断层；拦截 `WM_ERASEBKGND` 消息填满 `#0D0E12` 深空暗黑背景刷，彻底消灭缝隙透光。
+- **README 说明文档精准重构与修正**：
+  - 修正快捷键列表，移除 `F9` 诊断热键与冗余的 `Shift/Alt+方向键`，保留 `Ctrl+Alt+方向键`。
+  - 修正 INI 示例 `ApiKey=` 默认为空，修正 `GlobalTestMode=0` 及 `SourceLanguage=Auto`。
+  - 移除不实描述（如 `Ctrl+Enter` 及过度夸张修饰），补充 `assets/`, `tools/`, `environment.yml` 等完整的项目目录结构图。
+  - 精简配置界面「开启翻译双悬浮框」复选框文案。
 
 ---
 
 ### 发布附件下载
 - `HD2ChatOverlay.exe`：独立编译单文件可执行程序 (解压或直接双击运行即可)
-- `HD2ChatOverlay-v1.4.1.zip`：包含 README、CHANGELOG 及完整源码资产的 Release 压缩包
+- `HD2ChatOverlay-v1.4.2.zip`：包含 README、CHANGELOG 及完整源码资产的 Release 压缩包
 """
 
     headers = {
