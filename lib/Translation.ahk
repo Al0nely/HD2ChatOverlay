@@ -20,19 +20,20 @@ class OpenRouterClient {
             http.SetRequestHeader("X-Title", "HD2 Chat Overlay")
             if (apiKey != "")
                 http.SetRequestHeader("Authorization", "Bearer " apiKey)
-            
+
             http.Send()
             if !http.WaitForResponse(5) { ; 5 秒超时
                 return { success: false, error: "请求超时 (5s)", models: [] }
             }
 
             if (http.Status != 200) {
-                return { success: false, error: this._ExtractErrorMessage(http.Status, this._GetUtf8Response(http)), models: [] }
+                return { success: false, error: this._ExtractErrorMessage(http.Status, this._GetUtf8Response(http)),
+                    models: [] }
             }
 
             respText := this._GetUtf8Response(http)
             models := this._ParseModelList(respText)
-            
+
             return { success: true, error: "", models: models }
         } catch Error as err {
             return { success: false, error: "网络连接失败: " err.Message, models: [] }
@@ -57,7 +58,7 @@ class OpenRouterClient {
             http.SetRequestHeader("X-Title", "HD2 Chat Overlay")
             if (apiKey != "")
                 http.SetRequestHeader("Authorization", "Bearer " apiKey)
-            
+
             http.Send()
             if !http.WaitForResponse(5) { ; 5 秒超时
                 return { success: false, latencyMs: 0, error: "连接超时 (5s)", status: 0 }
@@ -99,14 +100,28 @@ class OpenRouterClient {
         url := RegExReplace(apiBase, "/+$", "") "/chat/completions"
 
         ; 极具人性化与真人玩家感的高自由度网络交流人设 Prompt
+        ; srcDesc := (sourceLang != "" && StrLower(sourceLang) != "auto") ? ("from " sourceLang " ") : ""
+        ; systemPrompt := "You are an authentic online multiplayer gamer translating real-time in-game chat for Helldivers 2. Translate the user message " srcDesc "into natural, casual, humanized online gamer talk in " targetLang ". "
+        ; systemPrompt .= "Style & Persona Rules: "
+        ; systemPrompt .= "1. REAL GAMER TALK: Translate into real, relaxed online chat style as if typed by a human player in Discord or in-game chat. Use common gamer slang, informal internet shorthand, and abbreviations (e.g., 'u', 'r', 'bro', 'dude', 'fk', 'wtf', 'omg', 'thx', 'pls', 'nvm', 'sec', 'hold up', 'lmao'). "
+        ; systemPrompt .= "2. EMOTICONS & KAOMOJI: Match the emotional sentiment of the user's sentence. When expressing joy, frustration, pleading, or humor, naturally include text emoticons or kaomoji like ':)', ':(', 'xD', 'T0T', 'T_T', ';)' where appropriate. "
+        ; systemPrompt .= "3. NO FORMAL/MILITARY TONE: Avoid textbook, formal, or rigid military phrasing. Make it sound like a real human gamer quickly typing on a keyboard. "
+        ; systemPrompt .= "4. GAME TERMS: Keep Helldivers 2 terms accurate (e.g., Bile Titan, Charger, Automaton, Stratagem, 500kg, extract). "
+        ; systemPrompt .= "Output ONLY the final translated chat text without quotes or explanations."
+
         srcDesc := (sourceLang != "" && StrLower(sourceLang) != "auto") ? ("from " sourceLang " ") : ""
-        systemPrompt := "You are an authentic online multiplayer gamer translating real-time in-game chat for Helldivers 2. Translate the user message " srcDesc "into natural, casual, humanized online gamer talk in " targetLang ". "
+        systemPrompt :=
+            "You are an authentic online multiplayer gamer translating real-time in-game chat for Helldivers 2. Translate the input " srcDesc "into natural, casual, humanized online gamer chat in " targetLang ". "
         systemPrompt .= "Style & Persona Rules: "
-        systemPrompt .= "1. REAL GAMER TALK: Translate into real, relaxed online chat style as if typed by a human player in Discord or in-game chat. Use common gamer slang, informal internet shorthand, and abbreviations (e.g., 'u', 'r', 'bro', 'dude', 'fk', 'wtf', 'omg', 'thx', 'pls', 'nvm', 'sec', 'hold up', 'lmao'). "
-        systemPrompt .= "2. EMOTICONS & KAOMOJI: Match the emotional sentiment of the user's sentence. When expressing joy, frustration, pleading, or humor, naturally include text emoticons or kaomoji like ':)', ':(', 'xD', 'T0T', 'T_T', ';)' where appropriate. "
-        systemPrompt .= "3. NO FORMAL/MILITARY TONE: Avoid textbook, formal, or rigid military phrasing. Make it sound like a real human gamer quickly typing on a keyboard. "
-        systemPrompt .= "4. GAME TERMS: Keep Helldivers 2 terms accurate (e.g., Bile Titan, Charger, Automaton, Stratagem, 500kg, extract). "
-        systemPrompt .= "Output ONLY the final translated chat text without quotes or explanations."
+        systemPrompt .=
+            "1. REAL GAMER TALK: Translate into raw, authentic gamer chat as typed in Discord/in-game squad chat. Adapt fully to " targetLang " gamer culture. For English, naturally use gamer shorthand (e.g., 'bro', 'pls', 're', 'tk', 'mb', 'fk'). For Chinese, use real player slang (e.g., '老哥', '拉我', '我的', '冲', 'nb'). "
+        systemPrompt .=
+            "2. EMOTICONS & SENTIMENT: Match the emotional energy and kaomoji/emoticons (e.g., 'T_T', 'xD', ':)') of the original sentence. DO NOT spam emoticons if the source text is neutral or plain. "
+        systemPrompt .=
+            "3. NO FORMAL TONE: Avoid textbook, formal, or rigid military phrasing. Keep it brief, snappy, and quick to read. "
+        systemPrompt .=
+            "4. GAME TERMS & GLOSSARY: Keep Helldivers 2 core terminology precise (e.g., Bile Titan, Charger, Stratagem, 500kg, Reinforce, Extract). If a explicit glossary mapping is provided in the prompt, ALWAYS prioritize it. "
+        systemPrompt .= "Output ONLY the final translated chat text without quotes, prefixes, or explanations."
 
         ; AC 自动机预扫描命中的当句术语动态注入
         if (glossaryHint != "")
@@ -128,14 +143,15 @@ class OpenRouterClient {
             http.SetRequestHeader("X-Title", "HD2 Chat Overlay")
             if (apiKey != "")
                 http.SetRequestHeader("Authorization", "Bearer " apiKey)
-            
+
             http.Send(jsonBody)
             if !http.WaitForResponse(8) { ; 8 秒超时
                 return { success: false, text: text, error: "翻译请求超时 (8s)" }
             }
 
             if (http.Status != 200) {
-                return { success: false, text: text, error: this._ExtractErrorMessage(http.Status, this._GetUtf8Response(http)) }
+                return { success: false, text: text, error: this._ExtractErrorMessage(http.Status, this._GetUtf8Response(
+                    http)) }
             }
 
             respText := this._GetUtf8Response(http)
@@ -207,14 +223,14 @@ class OpenRouterClient {
             if (ch == "\" && pos < len) {
                 nextCh := SubStr(str, pos + 1, 1)
                 switch nextCh {
-                    case '"':  out .= '"',  pos += 2
+                    case '"': out .= '"', pos += 2
                     case "\": out .= "\", pos += 2
-                    case "/":  out .= "/",  pos += 2
-                    case "b":  out .= "`b", pos += 2
-                    case "f":  out .= "`f", pos += 2
-                    case "n":  out .= "`n", pos += 2
-                    case "r":  out .= "`r", pos += 2
-                    case "t":  out .= "`t", pos += 2
+                    case "/": out .= "/", pos += 2
+                    case "b": out .= "`b", pos += 2
+                    case "f": out .= "`f", pos += 2
+                    case "n": out .= "`n", pos += 2
+                    case "r": out .= "`r", pos += 2
+                    case "t": out .= "`t", pos += 2
                     case "u":
                         if (pos + 5 <= len && RegExMatch(str, "^\\u([0-9a-fA-F]{4})", &m, pos)) {
                             out .= Chr(Integer("0x" m[1]))
@@ -241,7 +257,7 @@ class OpenRouterClient {
     static _ParseModelList(jsonText) {
         models := []
         seen := Map()
-        
+
         pos := 1
         while (pos := RegExMatch(jsonText, '"id"\s*:\s*"([^"]+)"', &m, pos)) {
             modelId := m[1]

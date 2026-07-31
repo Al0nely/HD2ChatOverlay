@@ -24,23 +24,22 @@ def main():
         sys.exit(1)
 
     repo = "Al0nely/HD2ChatOverlay"
-    tag = "v1.4.0"
-    release_name = "HD2 Chat Overlay v1.4.0 - 极致原生双悬浮窗 + AI 翻译 + 137 黑话词库"
+    tag = "v1.4.1"
+    release_name = "HD2 Chat Overlay v1.4.1 - 悬浮框文字对齐与偶发响应迟钝 Bug 修复"
 
-    body = """# HD2 Chat Overlay v1.4.0 正式发布
+    body = """# HD2 Chat Overlay v1.4.1 正式发布
 
-### 核心特性亮点
-- **极致黑金 UI 双悬浮窗**：原生高性能黑金界面，支持【原文框】与【淡蓝译文框】自适应居中联动，完美契合《绝地潜兵 2》视觉美学。
-- **AI 实时翻译**：支持 OpenRouter / DeepSeek / OpenAI 模型，默认快捷键 **Alt+T** 触发翻译，**Ctrl+Tab** 自由切换注入源。
-- **137 HD2 全套黑话术语库**：覆盖虫族/机器人/战术配备/重武器/战术动作/口癖黑话等 6 大分类，内置 AC 自动机毫秒级预扫描与 GitHub CDN 热更新。
-- **多语种与源/目标语言设置**：支持中文/英文/日文/德文/法文/西文/俄文/Auto 自动识别，前缀动态响应 `[自]`, `[中]`, `[英]`。
-- **免配置单文件即插即用**：零依赖独立编译运行 `HD2ChatOverlay.exe`。
+### 🐛 Bug 修复与排版优化
+- **悬浮框文字垂直居中与防截断算法**：动态适配字体尺寸，文字中轴与前缀标签中轴完美平齐，留出充足的底部下沉空间，彻底解决 `_` 下划线被边缘遮挡或文字偏高问题。
+- **悬浮框偶发响应迟钝修复**：优化 ShellHook 监听逻辑，自动识别排除本程序多窗口与 IME 输入法事件，彻底杜绝悬浮窗被误关闭或 Enter 按键响应不及时。
+- **翻译等待提示优化**：请求翻译时的悬浮框前缀由 `💬 [译中]` 优化为 `⏳ [译]`，避免右括号 `]` 截断并提供清晰等待反馈。
+- **稳定性增强**：修复 Win32 属性调用顺序及多处交互边界细节。
 
 ---
 
 ### 发布附件下载
 - `HD2ChatOverlay.exe`：独立编译单文件可执行程序 (解压或直接双击运行即可)
-- `HD2ChatOverlay-v1.4.0.zip`：包含 README、CHANGELOG 及完整源码资产的 Release 压缩包
+- `HD2ChatOverlay-v1.4.1.zip`：包含 README、CHANGELOG 及完整源码资产的 Release 压缩包
 """
 
     headers = {
@@ -98,7 +97,7 @@ def main():
 
     # 3. 上传附件
     assets = [
-        ("release/HD2ChatOverlay-v1.4.0.zip", "HD2ChatOverlay-v1.4.0.zip", "application/zip")
+        ("release/HD2ChatOverlay-v1.4.1.zip", "HD2ChatOverlay-v1.4.1.zip", "application/zip")
     ]
 
     for local_file, asset_name, content_type in assets:

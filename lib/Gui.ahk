@@ -33,7 +33,7 @@ ShowChatGui() {
 
     WriteLog("[Gui] ShowChatGui 被调用, isChatActive=" isChatActive)
 
-    if (isChatActive || (A_TickCount - lastShowTime < 200) || (A_TickCount <= g_ignoreEnterUntil)) {
+    if (isChatActive || (A_TickCount - lastShowTime < 150) || (A_TickCount <= g_ignoreEnterUntil)) {
         WriteLog("[Gui] 显示被跳过: isChatActive=" isChatActive ", 时间间隔=" (A_TickCount - lastShowTime))
         return
     }
@@ -47,10 +47,6 @@ ShowChatGui() {
     isChatActive := true
     lastShowTime := A_TickCount
     SetCapsLockSafe("Off")
-    try {
-        IME_SET(1, "A")
-    } catch {
-    }
 
     ; 注入源初始状态: 开启翻译默认译文框, 否则原文框
     g_injectSource := AppConfig.EnableAutoTranslate ? "translated" : "original"
@@ -97,7 +93,9 @@ HideGuiToOffscreen() {
 CloseGui(sendEsc := false) {
     global isChatActive, nativeIsChatActive, g_injectSource, g_ignoreEnterUntil
 
-    g_ignoreEnterUntil := A_TickCount + 400
+    if (sendEsc)
+        g_ignoreEnterUntil := A_TickCount + 150
+
     if !isChatActive {
         nativeIsChatActive := false
         return

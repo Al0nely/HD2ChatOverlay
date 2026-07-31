@@ -50,7 +50,7 @@ TranslateCurrentText(*) {
         }
     }
 
-    Native_SetPrefixText("💬 [译中]")
+    Native_SetPrefixText("⏳ [译]")
     Native_SetTransText("⏳ 正在请求 AI 翻译...")
     res := OpenRouterClient.TranslateText(rawText, AppConfig.TargetLanguage, AppConfig.SourceLanguage, AppConfig.ApiBase, AppConfig.ApiKey, AppConfig.Model, glossaryHint)
     Native_SetPrefixText("")
@@ -77,7 +77,7 @@ TranslateCurrentText(*) {
 ; -------------------------------------------------------------
 SubmitText(*) {
     global isChatActive, g_injectSource, g_ignoreEnterUntil
-    g_ignoreEnterUntil := A_TickCount + 400
+    g_ignoreEnterUntil := A_TickCount + 150
     if !isChatActive
         return
 

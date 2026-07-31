@@ -9,7 +9,7 @@ KeyHistory 0
 
 ; -------------------------------------------------------------
 ; HD2 Chat Overlay - 主入口
-; 版本: 1.4.0
+; 版本: 1.4.1
 ; 功能: 《绝地潜兵 2》中文输入悬浮窗插件 (原生模式)
 ; -------------------------------------------------------------
 
@@ -100,19 +100,23 @@ _ProcessShellEvent(activeHwnd) {
         return
 
     procName := ""
+    activePid := 0
     try {
+        activePid := WinGetPID("ahk_id " activeHwnd)
         procName := WinGetProcessName("ahk_id " activeHwnd)
     } catch {
         procName := "Unknown"
     }
 
-    guiThreadId := guiHwnd ? DllCall("GetWindowThreadProcessId", "Ptr", guiHwnd, "Ptr", 0, "UInt") : 0
+    myPid := DllCall("GetCurrentProcessId", "UInt")
+    myThreadId := DllCall("GetCurrentThreadId", "UInt")
     activeThreadId := DllCall("GetWindowThreadProcessId", "Ptr", activeHwnd, "Ptr", 0, "UInt")
     activeOwner := guiHwnd ? DllCall("GetWindow", "Ptr", activeHwnd, "UInt", 4, "Ptr") : 0
 
-    ; 过滤 IME 子窗口与自身线程
-    if (procName ~= "i)(TextInputHost|ctfmon|SogouInput|QQInput|BaiduInput)\.exe"
-        || activeThreadId == guiThreadId
+    ; 过滤 IME 子窗口与自身进程/线程创建的所有窗口 (包含译文悬浮窗 nativeTransGui、配置窗口等)
+    if (activePid == myPid
+        || activeThreadId == myThreadId
+        || (procName ~= "i)(TextInputHost|ctfmon|SogouInput|QQInput|BaiduInput)\.exe")
         || activeOwner == guiHwnd) {
         return
     }
@@ -142,7 +146,7 @@ global g_ignoreEnterUntil := 0
 ; -------------------------------------------------------------
 
 ; 游戏内且未激活聊天时: Enter 唤醒悬浮窗 (增加 g_ignoreEnterUntil 过滤文本提交发送的合成 Enter)
-#HotIf (WinActive("ahk_exe helldivers2.exe") || AppConfig.GlobalTestMode) && !isChatActive && !isAdjusting && (A_TickCount > g_ignoreEnterUntil)
+#HotIf (WinActive("ahk_id " GetGameHwnd()) || WinActive("ahk_exe helldivers2.exe") || AppConfig.GlobalTestMode) && !isChatActive && !isAdjusting && (A_TickCount > g_ignoreEnterUntil)
 
 $~$Enter::
 $~$NumpadEnter:: {
