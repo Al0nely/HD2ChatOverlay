@@ -68,7 +68,7 @@ GlobalTestMode=0  ; 1=全局测试模式(任意窗口可唤醒), 0=仅游戏内
 EnableAutoTranslate=0                    ; 1=开启翻译双悬浮框
 ApiBase=https://openrouter.ai/api/v1    ; OpenRouter / OpenAI 兼容接口地址
 ApiKey=                                 ; 默认为空，需填入您的 API Key
-Model=google/gemini-2.5-flash           ; 默认推荐模型 (低延迟低成本)
+Model=                                  ; 默认为空，可在线拉取或填写模型名称
 SourceLanguage=Auto                     ; 源语言
 TargetLanguage=English                   ; 目标翻译语言
 EnableGlossary=1                         ; 1=启用术语库 AC 自动机预扫描
@@ -83,7 +83,7 @@ SwitchSourceKey=^Tab                     ; 切换注入源快捷键 (默认 Ctrl
 
 ## AI 翻译与术语库
 
-1. 托盘菜单打开配置面板，勾选「开启翻译双悬浮框」，填入您的 API Key（默认为空），可按需调整 API Base 与模型（默认 `google/gemini-2.5-flash`）。
+1. 托盘菜单打开配置面板，勾选「开启翻译双悬浮框」，填入您的 API Key 与模型名称（默认为空，也可点击 "🔄 拉取模型列表" 自动选择），按需调整 API Base。
 2. 游戏内按 Enter 唤醒后，在下方原文框输入中文，按 `Alt+T` 翻译，上方淡蓝译文框显示英文（原文保留）。
 3. 按 `Ctrl+Tab` 切换注入源（选中框边条高亮：原文框绝地黄 / 译文框淡蓝），按 Enter 注入选中框内容；译文框为空时自动回退注入原文。
 4. **HD2 游戏黑话词库 (137 词条 + 6 细分类)**：

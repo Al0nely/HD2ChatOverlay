@@ -29,7 +29,7 @@ class AppConfig {
     static EnableAutoTranslate := false
     static ApiBase := "https://openrouter.ai/api/v1"
     static ApiKey := ""
-    static Model := "google/gemini-2.5-flash"
+    static Model := ""
     static ModelList := ""
     static SourceLanguage := "Auto"
     static TargetLanguage := "English"
@@ -59,7 +59,7 @@ class AppConfig {
         this.EnableAutoTranslate := this._ReadBool("Translation", "EnableAutoTranslate", false)
         this.ApiBase := this._ReadStr("Translation", "ApiBase", "https://openrouter.ai/api/v1")
         this.ApiKey := this._ReadStr("Translation", "ApiKey", "")
-        this.Model := this._ReadStr("Translation", "Model", "google/gemini-2.5-flash")
+        this.Model := this._ReadStr("Translation", "Model", "")
         this.ModelList := this._ReadStr("Translation", "ModelList", "")
         this.SourceLanguage := this._ReadStr("Translation", "SourceLanguage", "Auto")
         this.TargetLanguage := this._ReadStr("Translation", "TargetLanguage", "English")
@@ -123,7 +123,7 @@ class AppConfig {
         this.EnableAutoTranslate := false
         this.ApiBase := "https://openrouter.ai/api/v1"
         this.ApiKey := ""
-        this.Model := "google/gemini-2.5-flash"
+        this.Model := ""
         this.ModelList := ""
         this.SourceLanguage := "Auto"
         this.TargetLanguage := "English"

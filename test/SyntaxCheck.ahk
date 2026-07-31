@@ -29,8 +29,6 @@ errors := []
 ; --- 1. Config 加载 ---
 try {
     AppConfig.Load()
-    if (AppConfig.Model != "google/gemini-2.5-flash" && AppConfig.Model = "")
-        errors.Push("Config.Model 为空")
     if (AppConfig.TranslateKey = "")
         errors.Push("Config.TranslateKey 为空")
     if (AppConfig.SwitchSourceKey = "")
