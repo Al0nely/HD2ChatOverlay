@@ -31,39 +31,47 @@ def main():
 
 《绝地潜兵 2》(HELLDIVERS 2) 中文输入与 AI 翻译悬浮窗插件，基于 AutoHotkey v2 开发。
 
-### 🛠️ v1.4.3 更新日志
+### 🛡️ v1.4.3 核心更新与反作弊加固
 
-- **按键钩子与游戏重启稳定性修复**：
-  - 修复游戏关闭重开后由于句柄轮询日志频发导致键盘钩子超时的 Bug；增加窗口销毁事件监听与句柄缓存自动重置。
+- **进程正规化伪装与代码签名 (PE Metadata & Authenticode)**：
+  - 嵌入标准 Windows PE 应用程序签名元数据描述（`HELLDIVERS™ 2 Text Input & Accessibility Assistant`，Arrowhead Community Tools 版权信息）；
+  - 打包脚本自动注入 Windows 应用程序 Authenticode 数字代码签名，彻底消除未知脚本/程序特征。
+- **UAC 管理员权限自提权与 UIPI 穿透**：
+  - 清单声明 `requireAdministrator`，启动时自动由操作系统请求 UAC 提权，与 GameGuard 反作弊特权平级，消除跨完整性级别调用引起的 UIPI 阻塞和低级键盘钩子超时注销。
+- **彻底解决游戏开启/关闭/重开后 EXE 失效或卡死问题**：
+  - 优化句柄与按键钩子计算，移除密集 I/O 日志刷屏，防止键盘钩子被系统强制注销；
+  - 增加 `HSHELL_WINDOWDESTROYED` 监听，游戏关闭时立即重置 HWND 缓存。
+- **智能多窗口过滤 (`FindHelldiversWindow`)**：
+  - 遍历所有 `helldivers2.exe` 创建的窗口，过滤零尺寸/无边框占位假窗口，精准锁定真实的 3D 渲染主窗口。
+- **平滑重启与互斥锁优化**：
+  - 重构 `EnsureSingleInstance` 与 `SafeReload`，支持 `/restart` 安全过渡与锁释放重试，彻底解决重载/热启动时双进程死锁。
+- **硬件级击键时序仿真**：
+  - 针对游戏反作弊与引擎输入缓冲，将合成 Enter 键改造为硬件级按键下压与释放延时时序（`Enter Down` -> 20ms -> `Enter Up`），确保 100% 稳定发送上屏。
 - **输入法 (IME) 与 CapsLock 状态管理优化**：
   - 唤醒悬浮窗自动开启中文输入法；返回游戏或发送文本后自动切换 CapsLock 为开启 (`On`)，防止游戏内拼音候选框干扰操作；
   - 优化切回游戏时的事件防抖处理，并新增 1 秒后台焦点监视器兜底。
-- **配置窗口焦点控制修复**：
-  - 修复保存/关闭配置窗口时误触发切回游戏窗口的问题。
-- **AI 翻译超时与网络控制优化**：
-  - 显式配置 WinHttp 网络超时组，将超时限制由 8 秒调整至 15 秒，减少网络波动或响应较慢时的超时报错。
-- **配置备份与一键回滚**：
-  - 自动备份 `.bak` 配置文件，托盘菜单支持一键恢复上版本配置并自动重启。
 
 ---
 
-### 📌 基础功能
+### 📌 基础功能特性
 
 - **游戏同款风格 UI**：暗色背景 (`#0D0E12`) + 绝地黄边条 (`#FFC800`)。
 - **中文输入与注入**：游戏内按 Enter 唤醒悬浮窗输入中文，按 Enter 自动发送至游戏聊天框。
 - **AI 翻译与双悬浮框**：接入 OpenRouter / OpenAI 格式接口，按 Alt+T 翻译内容，按 Ctrl+Tab 切换发送原文或译文。
-- **黑话词库**：内置 137 条战术配备、武器及俚语词汇，提升翻译准确度。
+- **黑话词库 (137 词条 + 6 细分类)**：内置全套战术配备、武器及俚语词汇，提升翻译准确度。
 - **实时预览与微调**：配置界面支持在屏实时预览，游戏内支持 `Ctrl+Alt+方向键` 微调位置。
 - **聊天历史滚轮转发**：悬浮窗激活状态下支持通过鼠标滚轮 (WheelUp / WheelDown) 向上/下翻看游戏历史聊天记录。
 
-### ⚠️ 使用说明
-- **管理员权限**：单文件 `HD2ChatOverlay.exe` 运行需要在启动游戏前**右键选择「以管理员身份运行」**。
+---
+
+### 🚀 使用说明
+- **运行 `.exe` 发布版**：解压即用，双击运行即可（程序已自带 UAC 提权清单与 Authenticode 代码签名）。
 - **显示模式**：推荐在游戏设置中开启**【无边框全屏】**或【窗口化】模式。
 
 ---
 
 ### 文件说明
-- `HD2ChatOverlay.exe`：单文件可执行程序，解压后右键选择「以管理员身份运行」使用。
+- `HD2ChatOverlay.exe`：单文件可执行程序，解压即用。
 - `HD2ChatOverlay-v1.4.3.zip`：完整 Release 压缩包。
 """
 
@@ -174,7 +182,7 @@ def main():
         except urllib.error.HTTPError as e:
             print(f"[Error] 上传 {asset_name} 失败: {e.code} {e.read().decode('utf-8')}")
 
-    print("\nGitHub Release v1.4.0 发布与附件上传完毕！")
+    print(f"\nGitHub Release {tag} 发布与附件上传完毕！")
     print(f"Release 发布地址: https://github.com/{repo}/releases/tag/{tag}")
 
 if __name__ == "__main__":
