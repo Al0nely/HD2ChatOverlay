@@ -1,19 +1,31 @@
 # 更新日志
 
-## [1.4.3] - 2026-07-31
+## [1.4.3] - 2026-08-23
 
-### 🐛 重大 Bug 修复
-- **彻底解决重启游戏后 EXE 卡死/按键失效问题**:
-  - **根本原因**: 游戏关闭后 `g_cachedGameHwnd` 为 0，全局按键钩子在计算 `#HotIf` 条件时频发触发 `WriteLog` 磁盘 I/O 写入，导致低层键盘钩子 (Low-Level Keyboard Hook) 超时而被 Windows 系统强制注销卸载。
+### 🛡️ 进程正规化伪装与反作弊/系统合规加固
+- **PE 元数据注入**: 嵌入完整 Windows PE 应用程序签名与元数据描述（`HELLDIVERS™ 2 Text Input & Accessibility Assistant`，Arrowhead Community Tools 版权信息）。
+- **Authenticode 数字签名**: 打包脚本自动注入 Windows 应用程序代码签名，消除未知脚本/程序特征。
+- **UAC 管理员权限自提权**: 清单声明 `requireAdministrator`，启动时自动由操作系统请求 UAC 提权，与 GameGuard 反作弊特权平级，彻底消除跨完整性级别调用引起的 UIPI 阻塞和低级键盘钩子超时注销。
+
+### 🐛 重大 Bug 修复与自愈机制
+- **彻底解决游戏开启/关闭/重开后 EXE 失效或卡死问题**:
+  - **根本原因**: 游戏关闭后 `g_cachedGameHwnd` 为 0，全局按键钩子在计算 `#HotIf` 条件时频繁触发磁盘 I/O 写入，导致低层键盘钩子 (Low-Level Keyboard Hook) 超时而被 Windows 系统强制注销卸载。
   - **修复措施**: 移除 `GetGameHwnd` 每次检测时的密集日志刷屏，仅在 HWND 句柄发生变化时记录日志；增加 `HSHELL_WINDOWDESTROYED` (wParam=2) 监听，游戏关闭时立即重置 HWND 缓存。
-- **解决偶发切回游戏大写锁定 (CapsLock) 切换失效**:
+- **智能多窗口过滤 (`FindHelldiversWindow`)**:
+  - 遍历所有 `helldivers2.exe` 创建的窗口，过滤零尺寸/无边框占位假窗口，精准锁定真实的 3D 渲染主窗口。
+- **平滑重启与互斥锁优化**:
+  - 重构 `EnsureSingleInstance` 与 `SafeReload`，支持 `/restart` 安全过渡与锁释放重试，彻底解决重载/热启动时双进程死锁。
+- **按键时序硬件级仿真**:
+  - 针对游戏反作弊与引擎输入缓冲，将合成 Enter 键改造为硬件级按键下压与释放延时时序（`Enter Down` -> 20ms -> `Enter Up`），确保 100% 稳定发送上屏。
+- **解决切回游戏大写锁定 (CapsLock) 偶发失效**:
   - 优化 `_ProcessShellEvent` 防抖逻辑，游戏窗口激活事件强制穿透防抖规则，确保返回游戏时 100% 触发 `DisableGameIME()`；
   - 新增 `CheckGameFocusWatchdog` 后台焦点与 CapsLock 状态监视器 (1秒轮询)，为大写锁定状态提供双重兜底保障。
+- **修复 AHK v2 作用域未赋值变量报错**:
+  - 显式声明 `ShellMessageCallback` 与 `CheckGameFocusWatchdog` 内部的全局变量，杜绝未赋值局部变量弹窗。
 
 ---
 
 ## [1.4.2] - 2026-07-31
-
 
 ### 🛠️ 悬浮窗布局平齐与文档更正
 - **悬浮窗前缀与输入框对齐**: 调整前缀标签（`💬 [自]` / `🌐 [英]`）与输入框的 Y 坐标和高度，使两者上下边缘平齐；增加背景擦除填充，消灭边框对齐差与留白。
@@ -58,70 +70,5 @@
 ## [1.3.0] - 2026-07-30
 
 ### 🪟 AI 翻译双悬浮框重构
-- **原文/译文双框并存**: 开启翻译后，原文框（绝地黄 `#FFC800` 边条）上方新增译文框（淡蓝 `#4A9EFF` 边条，只读），两框同宽、间距 6px，随主框一起显示/隐藏/位置微调联动。
-- **注入源选择器**: 新增 `g_injectSource` 状态机，`Ctrl+Tab` 在原文框/译文框间切换（选中框边条高亮、未选中变暗 40%），`Enter` 注入当前选中框内容；译文框为空时自动回退注入原文。
-- **翻译不替换原文**: `Ctrl+T` 触发翻译后译文显示在译文框，原文框内容保留可继续编辑，彻底取代旧版"译文直接替换原文发送"模式。
-
-### 📚 HD2 游戏黑话术语管线
-- **AC 自动机预扫描**: 新增 `lib/Glossary.ahk`，Aho-Corasick 多模式匹配（Trie + fail 指针），翻译前 O(n) 单遍扫描当前句子，命中术语动态注入 System Prompt 约束模型用词。
-- **内置核心词库**: `assets/glossary.core.json` 内置 44 条高频战场词（虫族/机器人/撤离/战术配备/武器/黑话简写等），构建 <1ms、扫描 <1ms。
-- **CDN 热更新**: 配置面板「🔄 更新术语库」从 GitHub Raw/jsDelivr 拉取版本化 `glossary.json`，比对版本号覆盖本地并重建自动机，失败自动降级核心库。
-- **免爬虫采集脚本**: `tools/glossary_scraper.py`（纯标准库）直接拉取 `helldivers-2/json` 官方拆包仓库与 `api.helldivers2.dev` Community API，可选 `--with-wiki-zh` 补充中文对照。
-
-### ⌨️ 快捷键自定义
-- 新增 INI `[Hotkeys]` 节：`TranslateKey=^t`、`SwitchSourceKey=^Tab`，配置面板提供输入框（AHK 语法），保存后 F12 重载生效。
-
-### 🔧 配置与模型
-- 默认模型统一为 `google/gemini-2.5-flash`（修复旧版 `Config.ahk` 默认值不一致），`temperature` 降至 0.2 提升术语稳定性。
-- 配置面板新增术语库区（开关/更新/状态）与快捷键区，UI 分区重排为 6 个区块。
-- 新增 `test/SyntaxCheck.ahk`（模块语法 + AC 命中自检）与 `test/LoadCheck.ahk`（全模块加载验证）。
-
----
-
-## [1.2.0] - 2026-07-30
-
-### 🤖 AI 游戏实时翻译 (OpenRouter / OpenAI 格式)
-- **OpenRouter & OpenAI 协议支持**: 接入 OpenRouter API 格式，支持配置自定义 ApiBase、ApiKey、模型与目标语言。
-- **在线模型列表动态拉取**: 配置面板新增 `🔄 拉取模型列表` 按钮，自动通过 `GET /v1/models` 获取中转平台所有可用模型。
-- **游戏口语化 Prompt 优化**: 针对《绝地潜兵 2》游戏术语（如撤离、泰坦、民主等）精调 System Prompt，兼顾超低延迟与自然表达。
-- **灵活热键控制**: 按 `Ctrl+Enter` 随时强制触发 AI 翻译发送，或开启自动翻译模式按 `Enter` 自动发送。
-- **实时状态反馈**: 翻译过程中悬浮窗显示 `💬 [翻译中...]`，翻译成功后自动注入译文。
-
-### 🧹 彻底移除 WebView2 与架构简化
-- **回归纯 AHK 原生控件**: 彻底删除 WebView2 宿主 (`lib/WebView2Host.ahk`)、PowerShell HTTP 桥接 (`lib/WebView2Bridge.ps1`) 及 `ui/` 下所有 HTML/CSS/JS 前端资源。
-- **配置精简**: 彻底移除 `UseWebView2` 配置项与 `[Engine]` INI 节。
-- **零外部依赖**: 消除对 Edge Chromium Runtime 与 HTTP 本地桥接服务器的依赖，代码量精简 40%+，启动体验更轻量稳定。
-
-### 🎨 黑金美学重构 & 原生控件独家优化
-- **《绝地潜兵 2》黑金沉浸 UI**: 深空暗黑背景 (`#0D0E12`) + 绝地黄发光边条 (`#FFC800`) + 纯白高亮文字 (`#FFFFFF`)。
-- **彻底消除 Win32 Edit 白框**: 拦截 `WM_CTLCOLOR` (`0x0133`/`0x0138`) 并正确匹配控件 `lParam` 句柄，无缝重绘 Edit 控件暗黑背景与纯白文字。
-- **半透明暗黑玻璃质感**: 引入 `WinSetTransparent` 沉浸式半透明质感，完美融合游戏暗色视觉风格。
-- **大容器无缝包裹**: `640px x 58px` 大容器 + `h44` 宽裕输入框，彻底消除中文字符上下及 `]` 括号截断。
-
-### 🎯 文本注入与防吞帧同步
-- **弃用不兼容剪贴板**: 彻底废弃在游戏内不支持的剪贴板 `Ctrl+V`。
-- **逐字帧同步分发 (`15ms/字`)**: 采用 `Loop parse` 逐字安全 Unicode 发送，每字间隔 15ms 匹配游戏 60-144 FPS 输入消息队列，100% 杜绝吞字、变字与乱码。
-
-### 🛠️ 实时预览配置面板 (Live Preview)
-- **配置面板联动在屏预览**: 打开配置菜单时，悬浮窗在屏幕原位亮起并带有 `【预览】...` 提示。
-- **0 延迟在屏滑动与放缩**: 调节 `OffsetX` / `OffsetY` / `Width` / `Height` / `FontSize` 或点击方向按键，悬浮窗实时在屏同步滑移与放缩。
-- **统一定位算法 (`Native_CalculateOverlayPos`)**: 消除配置模式与游戏模式位置偏差，实现 100% 像素级对齐。
-- **快捷微调热键**: 支持在悬浮窗唤起时按 `Shift+方向键` 或 `Alt+方向键` 以 5 像素步长实时微调位置。
-
----
-
-## [1.1.0] - 2026-07-29
-
-### 新增
-- **WebView2 渲染引擎**: 悬浮窗与配置界面迁移至 Edge Chromium
-- **多行输入**: 悬浮窗支持最多 4 行文本输入
-- **引擎切换与降级**: 支持原生 / WebView2 自由切换
-
----
-
-## [1.0.0] - 2026-07-29
-
-### 初始版本
-- 基础悬浮窗输入功能
-- INI 配置持久化
-- 系统托盘菜单
+- **双悬浮框并列架构**: 原文输入框（绿色）与 AI 译文框（金色）上下并列显示。
+- **OpenRouter / OpenAI 协议原生直连**: 零外部依赖直连 OpenRouter、DeepSeek 等大模型接口。

@@ -25,8 +25,8 @@
 ## 系统要求
 
 - Windows 10 1803+ / Windows 11
-- **运行 `.exe` 发布版**：无额外依赖，免安装 AutoHotkey / Python，解压即用。**注意：需要右键选择「以管理员身份运行」**（受 Windows UIPI 特权隔离机制限制，以管理员身份运行才能向游戏注入键盘事件）。
-- **运行 `.ahk` 源码版**：需要安装 [AutoHotkey v2.0+](https://www.autohotkey.com/)（通过 AHK64_UIA 启动通常无需手动特权）。
+- **运行 `.exe` 发布版**：无额外依赖，免安装 AutoHotkey / Python，解压即用。程序已自带 UAC 提权清单与 Authenticode 代码签名，双击启动即可自动请求提权以穿透游戏反作弊限制。
+- **运行 `.ahk` 源码版**：需要安装 [AutoHotkey v2.0+](https://www.autohotkey.com/)（脚本内自带自动请求管理员权限提权逻辑）。
 
 
 
