@@ -2,6 +2,25 @@ import os
 import subprocess
 import zipfile
 
+def sign_executable(exe_path):
+    """为 EXE 注入自签名 Authenticode 数字签名证书，伪装正规软件凭据"""
+    ps_script = f'''
+    $certName = "HD2 Overlay Trusted Publisher"
+    $cert = Get-ChildItem Cert:\\CurrentUser\\My -CodeSigningCert | Where-Object {{ $_.Subject -match $certName }} | Select-Object -First 1
+    if (!$cert) {{
+        $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject "CN=$certName" -CertStoreLocation "Cert:\\CurrentUser\\My" -NotAfter (Get-Date).AddYears(5)
+    }}
+    Set-AuthenticodeSignature -FilePath "{exe_path}" -Certificate $cert -HashAlgorithm SHA256
+    '''
+    try:
+        res = subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], capture_output=True, text=True)
+        if res.returncode == 0:
+            print(f"[Sign Success] Authenticode digital signature applied to {os.path.basename(exe_path)}")
+        else:
+            print(f"[Sign Notice] {res.stderr.strip() or res.stdout.strip()}")
+    except Exception as e:
+        print(f"[Sign Warning] Signing skipped: {e}")
+
 def build():
     root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     ahk2exe = os.path.join(root_dir, "tools", "Ahk2Exe", "Ahk2Exe.exe")
@@ -26,6 +45,9 @@ def build():
 
     print("[Build Success] HD2ChatOverlay.exe compiled successfully.")
     
+    # 注入 Authenticode 数字签名伪装
+    sign_executable(exe_output)
+
     # 压包到 release 目录
     release_dir = os.path.join(root_dir, "release")
     os.makedirs(release_dir, exist_ok=True)

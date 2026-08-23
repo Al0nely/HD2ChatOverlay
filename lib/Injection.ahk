@@ -125,11 +125,15 @@ SubmitText(*) {
             SendOptimizedText(sanitizedText)
             Sleep(50)
             ReleaseModifiers()
-            SendEvent("{Enter}")
+            SendEvent("{Enter Down}")
+            Sleep(20)
+            SendEvent("{Enter Up}")
             DisableGameIME()
         } else {
             ReleaseModifiers()
-            SendEvent("{Enter}")
+            SendEvent("{Enter Down}")
+            Sleep(20)
+            SendEvent("{Enter Up}")
             DisableGameIME()
         }
     }

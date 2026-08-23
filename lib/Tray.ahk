@@ -72,7 +72,7 @@ _TrayRollbackConfig(*) {
     if (AppConfig.Rollback()) {
         TrayTip("配置已回滚", "已恢复到上一版本配置,脚本将重启", 1)
         Sleep(1500)
-        Reload()
+        SafeReload()
     } else {
         TrayTip("回滚失败", "无可用备份或恢复出错", 2)
     }

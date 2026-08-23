@@ -63,17 +63,29 @@ _ExitFlushLogs(*) {
 }
 
 ; -------------------------------------------------------------
-; 单实例锁 (Mutex)
+; 单实例锁 (Mutex) 与平滑重启
 ; -------------------------------------------------------------
 global g_singleInstanceMutex := 0
 
 EnsureSingleInstance() {
     global g_singleInstanceMutex
+    isRestart := InStr(DllCall("GetCommandLine", "Str"), "/restart")
+
     mutexName := "Local\HD2ChatOverlay_SingleInstance_Mutex"
     g_singleInstanceMutex := DllCall("CreateMutex", "Ptr", 0, "Int", true, "Str", mutexName, "Ptr")
     lastErr := DllCall("GetLastError", "UInt")
 
     if (lastErr = 183) { ; ERROR_ALREADY_EXISTS
+        if (isRestart) {
+            ; 若为重启启动，循环等待旧进程退出
+            loop 10 {
+                Sleep(150)
+                DllCall("CloseHandle", "Ptr", g_singleInstanceMutex)
+                g_singleInstanceMutex := DllCall("CreateMutex", "Ptr", 0, "Int", true, "Str", mutexName, "Ptr")
+                if (DllCall("GetLastError", "UInt") != 183)
+                    return g_singleInstanceMutex
+            }
+        }
         MsgBox("《绝地潜兵 2》中文输入插件已在后台运行中！`n请查看系统托盘图标。", "HD2 Chat Overlay", "Iconi")
         ExitApp()
     }
@@ -87,6 +99,11 @@ ReleaseSingleInstance() {
         DllCall("CloseHandle", "Ptr", g_singleInstanceMutex)
         g_singleInstanceMutex := 0
     }
+}
+
+SafeReload() {
+    ReleaseSingleInstance()
+    Reload()
 }
 
 ; -------------------------------------------------------------
@@ -247,15 +264,36 @@ PhysicalToLogical(value, hwnd := 0) {
 }
 
 ; -------------------------------------------------------------
-; 游戏窗口句柄缓存
+; 游戏窗口句柄智能探测与缓存
 ; -------------------------------------------------------------
 global g_cachedGameHwnd := 0
+
+; 筛选可见且具备有效分辨率的《绝地潜兵 2》主渲染窗口，避开 0x0 闪屏/崩溃守护/辅助窗口
+FindHelldiversWindow() {
+    hwnds := WinGetList("ahk_exe helldivers2.exe")
+    if (hwnds.Length = 0)
+        return 0
+
+    for hwnd in hwnds {
+        try {
+            style := WinGetStyle("ahk_id " hwnd)
+            ; 必须为可见窗口 (WS_VISIBLE = 0x10000000)
+            if !(style & 0x10000000)
+                continue
+            WinGetPos(&x, &y, &w, &h, "ahk_id " hwnd)
+            ; 过滤 0x0 或极小辅助窗口
+            if (w >= 320 && h >= 240)
+                return hwnd
+        }
+    }
+    return hwnds[1]
+}
 
 GetGameHwnd(forceRefresh := false) {
     global g_cachedGameHwnd
     if (forceRefresh || !g_cachedGameHwnd || !WinExist("ahk_id " g_cachedGameHwnd)) {
         oldHwnd := g_cachedGameHwnd
-        g_cachedGameHwnd := WinExist("ahk_exe helldivers2.exe")
+        g_cachedGameHwnd := FindHelldiversWindow()
         if (g_cachedGameHwnd != oldHwnd) {
             if (g_cachedGameHwnd)
                 WriteLog("[GameHwndCache] 捕获游戏窗口: 0x" Format("{:X}", g_cachedGameHwnd))
