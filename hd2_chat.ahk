@@ -107,6 +107,7 @@ global lastShellEventTime := 0
 global SHELL_DEBOUNCE_MS := 60
 
 ShellMessageCallback(wParam, lParam, *) {
+    global lastShellEventTime
     ; 1=WINDOWCREATED, 2=WINDOWDESTROYED, 4=WINDOWACTIVATED, 32769=RUDEAPPACTIVATED, 32772=TASKMAN
     if (wParam = 1 || wParam = 2 || wParam = 4 || wParam = 32769 || wParam = 32772) {
         now := A_TickCount
@@ -192,6 +193,7 @@ _ProcessShellEvent(activeHwnd, eventType := 0) {
 SetTimer(CheckGameFocusWatchdog, 1000)
 
 CheckGameFocusWatchdog() {
+    global isChatActive, isAdjusting
     gameHwnd := GetGameHwnd()
     
     ; 1. 状态自愈：游戏关闭或不存在时，若 isChatActive 残留，强制清空并收起
