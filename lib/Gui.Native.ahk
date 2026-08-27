@@ -148,8 +148,8 @@ Native_WM_CTLCOLOR(wParam, lParam, msg, hwnd) {
 
 Native_WM_ERASEBKGND(wParam, lParam, msg, hwnd) {
     global nativeChatGui, nativeTransGui, hDarkBrush
+    static rc := Buffer(16, 0)
     if (hDarkBrush && (hwnd == nativeChatGui.Hwnd || (nativeTransGui && hwnd == nativeTransGui.Hwnd))) {
-        rc := Buffer(16, 0)
         DllCall("GetClientRect", "Ptr", hwnd, "Ptr", rc)
         DllCall("FillRect", "Ptr", wParam, "Ptr", rc, "Ptr", hDarkBrush)
         return 1

@@ -214,19 +214,15 @@ class Glossary {
             else
                 node := this.root
 
-            ; 收集当前节点所有输出（含 fail 链上的后缀匹配）
-            tmp := node
-            while (tmp != this.root) {
-                if (tmp.HasOwnProp("output")) {
-                    for _, termIdx in tmp.output {
-                        if (!seen.Has(termIdx)) {
-                            seen[termIdx] := true
-                            t := this.terms[termIdx]
-                            results.Push({ zh: t.zh, en: t.en, category: t.HasOwnProp("category") ? t.category : "" })
-                        }
+            ; 收集当前节点匹配输出 (构建阶段已沿 fail 链全量合并，直接 O(1) 取用无需遍历)
+            if (node.HasOwnProp("output")) {
+                for _, termIdx in node.output {
+                    if (!seen.Has(termIdx)) {
+                        seen[termIdx] := true
+                        t := this.terms[termIdx]
+                        results.Push({ zh: t.zh, en: t.en, category: t.HasOwnProp("category") ? t.category : "" })
                     }
                 }
-                tmp := tmp.fail
             }
         }
 

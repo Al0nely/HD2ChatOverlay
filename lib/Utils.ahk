@@ -289,23 +289,33 @@ FindHelldiversWindow() {
     return hwnds[1]
 }
 
+global g_lastGameSearchTick := 0
+
 GetGameHwnd(forceRefresh := false) {
-    global g_cachedGameHwnd
-    if (forceRefresh || !g_cachedGameHwnd || !WinExist("ahk_id " g_cachedGameHwnd)) {
-        oldHwnd := g_cachedGameHwnd
-        g_cachedGameHwnd := FindHelldiversWindow()
-        if (g_cachedGameHwnd != oldHwnd) {
-            if (g_cachedGameHwnd)
-                WriteLog("[GameHwndCache] 捕获游戏窗口: 0x" Format("{:X}", g_cachedGameHwnd))
-            else
-                WriteLog("[GameHwndCache] 游戏窗口已关闭或重置")
-        }
+    global g_cachedGameHwnd, g_lastGameSearchTick
+    now := A_TickCount
+    if (g_cachedGameHwnd && WinExist("ahk_id " g_cachedGameHwnd) && !forceRefresh)
+        return g_cachedGameHwnd
+
+    ; 当未找到游戏时，至少间隔 500ms 再执行昂贵的 WinGetList 扫描 (ShellHook 会在窗口创建时主动刷新)
+    if (!forceRefresh && now - g_lastGameSearchTick < 500)
+        return g_cachedGameHwnd
+
+    g_lastGameSearchTick := now
+    oldHwnd := g_cachedGameHwnd
+    g_cachedGameHwnd := FindHelldiversWindow()
+    if (g_cachedGameHwnd != oldHwnd) {
+        if (g_cachedGameHwnd)
+            WriteLog("[GameHwndCache] 捕获游戏窗口: 0x" Format("{:X}", g_cachedGameHwnd))
+        else
+            WriteLog("[GameHwndCache] 游戏窗口已关闭或重置")
     }
     return g_cachedGameHwnd
 }
 
 InvalidateGameHwndCache() {
-    global g_cachedGameHwnd
+    global g_cachedGameHwnd, g_lastGameSearchTick
+    g_lastGameSearchTick := 0
     if (g_cachedGameHwnd != 0) {
         g_cachedGameHwnd := 0
         WriteLog("[GameHwndCache] 强制清空游戏窗口缓存")

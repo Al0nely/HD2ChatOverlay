@@ -50,7 +50,7 @@ class AppConfig {
         this.OffsetY := this._ReadInt("Coordinates", "OffsetY", 638)
         this.ChunkSize := this._ReadInt("Injection", "ChunkSize", 1)
         this.ChunkDelay := this._ReadInt("Injection", "ChunkDelay", 15)
-        this.EnableDebugLog := this._ReadBool("Debug", "EnableDebugLog", true)
+        this.EnableDebugLog := this._ReadBool("Debug", "EnableDebugLog", false)
         this.FontName := this._ReadStr("UI", "FontName", "SimHei")
         this.FontSize := this._ReadInt("UI", "FontSize", 16)
         this.OverlayWidth := this._ReadInt("UI", "OverlayWidth", 640)

@@ -78,6 +78,19 @@ class OpenRouterClient {
         }
     }
 
+    static _httpClient := ""
+
+    static _GetHttpClient() {
+        if (!this._httpClient) {
+            this._httpClient := ComObject("WinHttp.WinHttpRequest.5.1")
+        }
+        return this._httpClient
+    }
+
+    static _ResetHttpClient() {
+        this._httpClient := ""
+    }
+
     ; -------------------------------------------------------------
     ; 翻译文本 (POST /v1/chat/completions)
     ; -------------------------------------------------------------
@@ -98,16 +111,6 @@ class OpenRouterClient {
             sourceLang := "Auto"
 
         url := RegExReplace(apiBase, "/+$", "") "/chat/completions"
-
-        ; 极具人性化与真人玩家感的高自由度网络交流人设 Prompt
-        ; srcDesc := (sourceLang != "" && StrLower(sourceLang) != "auto") ? ("from " sourceLang " ") : ""
-        ; systemPrompt := "You are an authentic online multiplayer gamer translating real-time in-game chat for Helldivers 2. Translate the user message " srcDesc "into natural, casual, humanized online gamer talk in " targetLang ". "
-        ; systemPrompt .= "Style & Persona Rules: "
-        ; systemPrompt .= "1. REAL GAMER TALK: Translate into real, relaxed online chat style as if typed by a human player in Discord or in-game chat. Use common gamer slang, informal internet shorthand, and abbreviations (e.g., 'u', 'r', 'bro', 'dude', 'fk', 'wtf', 'omg', 'thx', 'pls', 'nvm', 'sec', 'hold up', 'lmao'). "
-        ; systemPrompt .= "2. EMOTICONS & KAOMOJI: Match the emotional sentiment of the user's sentence. When expressing joy, frustration, pleading, or humor, naturally include text emoticons or kaomoji like ':)', ':(', 'xD', 'T0T', 'T_T', ';)' where appropriate. "
-        ; systemPrompt .= "3. NO FORMAL/MILITARY TONE: Avoid textbook, formal, or rigid military phrasing. Make it sound like a real human gamer quickly typing on a keyboard. "
-        ; systemPrompt .= "4. GAME TERMS: Keep Helldivers 2 terms accurate (e.g., Bile Titan, Charger, Automaton, Stratagem, 500kg, extract). "
-        ; systemPrompt .= "Output ONLY the final translated chat text without quotes or explanations."
 
         srcDesc := (sourceLang != "" && StrLower(sourceLang) != "auto") ? ("from " sourceLang " ") : ""
         systemPrompt :=
@@ -135,9 +138,10 @@ class OpenRouterClient {
         jsonBody .= '"temperature":0.6}'
 
         try {
-            http := ComObject("WinHttp.WinHttpRequest.5.1")
+            http := this._GetHttpClient()
             http.SetTimeouts(5000, 5000, 10000, 15000) ; 域名 5s, 连接 5s, 发送 10s, 接收 15s
             http.Open("POST", url, true)
+            http.SetRequestHeader("Connection", "Keep-Alive")
             http.SetRequestHeader("Content-Type", "application/json; charset=utf-8")
             http.SetRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) HD2ChatOverlay/1.4.3")
             http.SetRequestHeader("HTTP-Referer", "https://github.com/HD2ChatOverlay")
@@ -147,6 +151,7 @@ class OpenRouterClient {
 
             http.Send(jsonBody)
             if !http.WaitForResponse(15) { ; 15 秒超时
+                this._ResetHttpClient()
                 return { success: false, text: text, error: "翻译请求超时 (15s)，请检查网络或更换快速模型" }
             }
 
@@ -163,6 +168,7 @@ class OpenRouterClient {
 
             return { success: true, text: translated, error: "" }
         } catch Error as err {
+            this._ResetHttpClient()
             return { success: false, text: text, error: "翻译网络异常: " err.Message }
         }
     }
@@ -213,43 +219,27 @@ class OpenRouterClient {
     }
 
     ; -------------------------------------------------------------
-    ; JSON 解码基础字符串
+    ; JSON 解码基础字符串 (高性能批量替换)
     ; -------------------------------------------------------------
     static _UnescapeJsonStr(str) {
-        out := ""
-        pos := 1
-        len := StrLen(str)
-        while (pos <= len) {
-            ch := SubStr(str, pos, 1)
-            if (ch == "\" && pos < len) {
-                nextCh := SubStr(str, pos + 1, 1)
-                switch nextCh {
-                    case '"': out .= '"', pos += 2
-                    case "\": out .= "\", pos += 2
-                    case "/": out .= "/", pos += 2
-                    case "b": out .= "`b", pos += 2
-                    case "f": out .= "`f", pos += 2
-                    case "n": out .= "`n", pos += 2
-                    case "r": out .= "`r", pos += 2
-                    case "t": out .= "`t", pos += 2
-                    case "u":
-                        if (pos + 5 <= len && RegExMatch(str, "^\\u([0-9a-fA-F]{4})", &m, pos)) {
-                            out .= Chr(Integer("0x" m[1]))
-                            pos += 6
-                        } else {
-                            out .= "\u"
-                            pos += 2
-                        }
-                    default:
-                        out .= nextCh
-                        pos += 2
-                }
-            } else {
-                out .= ch
-                pos += 1
+        if (!InStr(str, "\"))
+            return str
+
+        str := StrReplace(str, '\"', '"')
+        str := StrReplace(str, '\\', '\')
+        str := StrReplace(str, '\/', '/')
+        str := StrReplace(str, '\b', '`b')
+        str := StrReplace(str, '\f', '`f')
+        str := StrReplace(str, '\n', '`n')
+        str := StrReplace(str, '\r', '`r')
+        str := StrReplace(str, '\t', '`t')
+
+        if InStr(str, "\u") {
+            while RegExMatch(str, "\\u([0-9a-fA-F]{4})", &m) {
+                str := StrReplace(str, m[0], Chr(Integer("0x" m[1])))
             }
         }
-        return out
+        return str
     }
 
     ; -------------------------------------------------------------

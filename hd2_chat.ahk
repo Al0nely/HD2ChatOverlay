@@ -11,26 +11,13 @@
 ;@Ahk2Exe-SetCompanyName Arrowhead Community Tools
 ;@Ahk2Exe-SetCopyright Copyright (C) 2024-2026 Al0nely. All rights reserved.
 ;@Ahk2Exe-SetOrigFilename HD2ChatOverlay.exe
-;@Ahk2Exe-UpdateManifest 3
+;@Ahk2Exe-UpdateManifest 0
 
 ListLines 0
 KeyHistory 0
 
-; -------------------------------------------------------------
-; 🛡️ 管理员权限自提权检测 (与 GameGuard 反作弊特权平级，消除 UIPI 跨进程阻塞)
-; -------------------------------------------------------------
-if (!A_IsAdmin) {
-    try {
-        if (A_IsCompiled)
-            Run('*RunAs "' A_ScriptFullPath '" /restart')
-        else
-            Run('*RunAs "' A_AhkPath '" /restart "' A_ScriptFullPath '"')
-        ExitApp()
-    } catch {
-        MsgBox("《绝地潜兵 2》中文输入插件需要管理员权限以与游戏安全交互。`n请右键选择「以管理员身份运行」。", "HD2 Chat Overlay - 权限不足", "Icon!")
-        ExitApp()
-    }
-}
+; 提高当前进程调度优先级至 AboveNormal，确保在游戏高 CPU 占用 (80-100%) 时按键拦截与悬浮窗响应丝滑无卡顿
+try ProcessSetPriority("AboveNormal")
 
 ; -------------------------------------------------------------
 ; HD2 Chat Overlay - 主入口
@@ -105,6 +92,7 @@ OnMessage(shellMessageNum, ShellMessageCallback)
 global lastActiveHwnd := 0
 global lastShellEventTime := 0
 global SHELL_DEBOUNCE_MS := 60
+global isGameActive := false
 
 ShellMessageCallback(wParam, lParam, *) {
     global lastShellEventTime
@@ -121,13 +109,14 @@ ShellMessageCallback(wParam, lParam, *) {
 global overlayInvokedWindow := 0
 
 _ProcessShellEvent(activeHwnd, eventType := 0) {
-    global lastActiveHwnd, isChatActive, isBoundToGame, lastShellEventTime, overlayInvokedWindow
+    global lastActiveHwnd, isChatActive, isBoundToGame, lastShellEventTime, overlayInvokedWindow, isGameActive
 
     gameHwnd := GetGameHwnd()
 
     ; 窗口销毁事件 (wParam = 2): 若游戏进程/窗口销毁，及时重置缓存
     if (eventType = 2) {
         if (gameHwnd && activeHwnd == gameHwnd) {
+            isGameActive := false
             InvalidateGameHwndCache()
             if (isChatActive)
                 CloseGui(false)
@@ -170,12 +159,14 @@ _ProcessShellEvent(activeHwnd, eventType := 0) {
     }
 
     if (gameHwnd && activeHwnd = gameHwnd) {
+        isGameActive := true
         if DllCall("IsHungAppWindow", "Ptr", gameHwnd)
             return
         if isChatActive
             return
         DisableGameIME()
     } else if (activeHwnd != 0) {
+        isGameActive := false
         if (isChatActive && !isAdjusting && !AppConfig.GlobalTestMode) {
             CloseGui(false)
         }
@@ -193,11 +184,12 @@ _ProcessShellEvent(activeHwnd, eventType := 0) {
 SetTimer(CheckGameFocusWatchdog, 1000)
 
 CheckGameFocusWatchdog() {
-    global isChatActive, isAdjusting
+    global isChatActive, isAdjusting, isGameActive
     gameHwnd := GetGameHwnd()
     
     ; 1. 状态自愈：游戏关闭或不存在时，若 isChatActive 残留，强制清空并收起
     if (!gameHwnd || !WinExist("ahk_id " gameHwnd)) {
+        isGameActive := false
         if (isChatActive && !WinActive("ahk_id " GetChatGuiHwnd())) {
             CloseGui(false)
         }
@@ -206,12 +198,14 @@ CheckGameFocusWatchdog() {
 
     ; 2. 当返回游戏且未开启 Overlay 输入框时，兜底确保 CapsLock 设为 On
     if WinActive("ahk_id " gameHwnd) {
+        isGameActive := true
         if (!isChatActive && !isAdjusting) {
             if (!GetKeyState("CapsLock", "T")) {
                 DisableGameIME()
             }
         }
     } else {
+        isGameActive := false
         ; 离开游戏窗口且悬浮窗处于激活态时，自动关闭悬浮窗以防卡死
         if (isChatActive && !isAdjusting && !AppConfig.GlobalTestMode && !WinActive("ahk_id " GetChatGuiHwnd())) {
             CloseGui(false)
@@ -225,8 +219,8 @@ global g_ignoreEnterUntil := 0
 ; 热键定义
 ; -------------------------------------------------------------
 
-; 游戏内且未激活聊天时: Enter 唤醒悬浮窗 (增加 g_ignoreEnterUntil 过滤文本提交发送的合成 Enter)
-#HotIf (WinActive("ahk_id " GetGameHwnd()) || WinActive("ahk_exe helldivers2.exe") || AppConfig.GlobalTestMode) && !isChatActive && !isAdjusting && (A_TickCount > g_ignoreEnterUntil)
+; 游戏内且未激活聊天时: Enter 唤醒悬浮窗 (极速短路求值，减少全局 Enter 击键延迟)
+#HotIf (isGameActive || AppConfig.GlobalTestMode || (WinActive("ahk_id " GetGameHwnd()))) && !isChatActive && !isAdjusting && (A_TickCount > g_ignoreEnterUntil)
 
 $~$Enter::
 $~$NumpadEnter:: {
