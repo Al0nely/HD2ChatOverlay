@@ -93,6 +93,7 @@ global lastActiveHwnd := 0
 global lastShellEventTime := 0
 global SHELL_DEBOUNCE_MS := 60
 global isGameActive := false
+global g_savedExternalCapsLock := "Off"
 
 ShellMessageCallback(wParam, lParam, *) {
     global lastShellEventTime
@@ -109,7 +110,7 @@ ShellMessageCallback(wParam, lParam, *) {
 global overlayInvokedWindow := 0
 
 _ProcessShellEvent(activeHwnd, eventType := 0) {
-    global lastActiveHwnd, isChatActive, isBoundToGame, lastShellEventTime, overlayInvokedWindow, isGameActive
+    global lastActiveHwnd, isChatActive, isBoundToGame, lastShellEventTime, overlayInvokedWindow, isGameActive, g_savedExternalCapsLock
 
     gameHwnd := GetGameHwnd()
 
@@ -159,6 +160,10 @@ _ProcessShellEvent(activeHwnd, eventType := 0) {
     }
 
     if (gameHwnd && activeHwnd = gameHwnd) {
+        if (!isGameActive) {
+            ; 从外部非游戏窗口切入游戏：暂存切入前外部窗口的大写锁定状态
+            g_savedExternalCapsLock := GetKeyState("CapsLock", "T") ? "On" : "Off"
+        }
         isGameActive := true
         if DllCall("IsHungAppWindow", "Ptr", gameHwnd)
             return
@@ -166,12 +171,15 @@ _ProcessShellEvent(activeHwnd, eventType := 0) {
             return
         DisableGameIME()
     } else if (activeHwnd != 0) {
+        if (isGameActive) {
+            ; 从游戏切出到外部窗口：精准还原切入前该外部窗口原本的大写锁定状态
+            if (!isChatActive) {
+                SetCapsLockSafe(g_savedExternalCapsLock)
+            }
+        }
         isGameActive := false
         if (isChatActive && !isAdjusting && !AppConfig.GlobalTestMode) {
             CloseGui(false)
-        }
-        if (!isChatActive) {
-            SetCapsLockSafe("Off")
         }
         isBoundToGame := false
     }
@@ -184,11 +192,14 @@ _ProcessShellEvent(activeHwnd, eventType := 0) {
 SetTimer(CheckGameFocusWatchdog, 1000)
 
 CheckGameFocusWatchdog() {
-    global isChatActive, isAdjusting, isGameActive
+    global isChatActive, isAdjusting, isGameActive, g_savedExternalCapsLock
     gameHwnd := GetGameHwnd()
     
     ; 1. 状态自愈：游戏关闭或不存在时，若 isChatActive 残留，强制清空并收起
     if (!gameHwnd || !WinExist("ahk_id " gameHwnd)) {
+        if (isGameActive && !isChatActive) {
+            SetCapsLockSafe(g_savedExternalCapsLock)
+        }
         isGameActive := false
         if (isChatActive && !WinActive("ahk_id " GetChatGuiHwnd())) {
             CloseGui(false)
@@ -198,6 +209,9 @@ CheckGameFocusWatchdog() {
 
     ; 2. 当返回游戏且未开启 Overlay 输入框时，兜底确保 CapsLock 设为 On
     if WinActive("ahk_id " gameHwnd) {
+        if (!isGameActive) {
+            g_savedExternalCapsLock := GetKeyState("CapsLock", "T") ? "On" : "Off"
+        }
         isGameActive := true
         if (!isChatActive && !isAdjusting) {
             if (!GetKeyState("CapsLock", "T")) {
@@ -205,6 +219,11 @@ CheckGameFocusWatchdog() {
             }
         }
     } else {
+        if (isGameActive) {
+            if (!isChatActive) {
+                SetCapsLockSafe(g_savedExternalCapsLock)
+            }
+        }
         isGameActive := false
         ; 离开游戏窗口且悬浮窗处于激活态时，自动关闭悬浮窗以防卡死
         if (isChatActive && !isAdjusting && !AppConfig.GlobalTestMode && !WinActive("ahk_id " GetChatGuiHwnd())) {

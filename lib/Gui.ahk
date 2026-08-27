@@ -108,8 +108,10 @@ CloseGui(sendEsc := false) {
         if (sendEsc) {
             ReleaseModifiers()
             SendEvent("{Escape}")
+            DisableGameIME()
+        } else if WinActive("ahk_id " gameHwnd) {
+            DisableGameIME()
         }
-        DisableGameIME()
     }
 }
 
