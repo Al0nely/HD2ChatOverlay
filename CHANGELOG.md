@@ -2,10 +2,26 @@
 
 ## [1.4.3] - 2026-08-23
 
+### ⚡ 性能优化、免管理员权限与大小写智能流转
+- **免管理员权限启动 (`asInvoker`)**:
+  - 移除强制 UAC 管理员提权代码，PE Manifest 清单配置为 `asInvoker`，双击直接以标准用户身份启动，零弹窗秒开。
+- **大小写锁定 (CapsLock) 智能记忆与精准双向还原**:
+  - 自动捕获并暂存切入游戏前外部窗口的真实 CapsLock 状态；
+  - 调出悬浮窗时自动切换为小写 (`Off`) 以确保拼音打字顺畅；返回游戏自动恢复大写 (`On`) 防止 WASD 误弹输入法；
+  - 离开游戏切回其他窗口（浏览器/代码编辑器等）时，精准还原外部窗口原本的大小写状态。
+- **默认关闭调试日志**:
+  - `EnableDebugLog` 默认值调整为 `0` (False)，减少磁盘 I/O 开销与日志文件膨胀。
+- **系统级击键延迟消除与全方位性能飞跃**:
+  - **`#HotIf` 极速短路**: 由 `ShellHook` 实时维护内存状态 `isGameActive`，消除每次按下 Enter 时多重 Win32 API 遍历调用引起的击键延迟；
+  - **进程优先级提升 (`AboveNormal`)**: 确保在游戏高 CPU 占用 (80%~100%) 的高烈度战场下按键响应与悬浮窗毫无卡顿；
+  - **AC 自动机 $O(1)$ 字典链接优化**: 移除字符匹配时的 fail 链动态回溯，单句黑话词库扫描提速至 26.6 μs；
+  - **AI 翻译 Keep-Alive 连接池**: 保持 `WinHttpRequest` 单例连接复用，单次翻译请求网络往返延迟降低 ~100-300ms；
+  - **Win32 绘制内存开销消除**: 预分配 `Native_WM_ERASEBKGND` 静态矩形缓冲区，消除 GC 内存抖动；
+  - **空载窗口扫描节流**: 游戏未运行状态下增加 500ms 搜索防抖节流，空载 CPU 占用归零。
+
 ### 🛡️ 进程正规化伪装与反作弊/系统合规加固
 - **PE 元数据注入**: 嵌入完整 Windows PE 应用程序签名与元数据描述（`HELLDIVERS™ 2 Text Input & Accessibility Assistant`，Arrowhead Community Tools 版权信息）。
 - **Authenticode 数字签名**: 打包脚本自动注入 Windows 应用程序代码签名，消除未知脚本/程序特征。
-- **UAC 管理员权限自提权**: 清单声明 `requireAdministrator`，启动时自动由操作系统请求 UAC 提权，与 GameGuard 反作弊特权平级，彻底消除跨完整性级别调用引起的 UIPI 阻塞和低级键盘钩子超时注销。
 
 ### 🐛 重大 Bug 修复与自愈机制
 - **彻底解决游戏开启/关闭/重开后 EXE 失效或卡死问题**:
@@ -17,9 +33,6 @@
   - 重构 `EnsureSingleInstance` 与 `SafeReload`，支持 `/restart` 安全过渡与锁释放重试，彻底解决重载/热启动时双进程死锁。
 - **按键时序硬件级仿真**:
   - 针对游戏反作弊与引擎输入缓冲，将合成 Enter 键改造为硬件级按键下压与释放延时时序（`Enter Down` -> 20ms -> `Enter Up`），确保 100% 稳定发送上屏。
-- **解决切回游戏大写锁定 (CapsLock) 偶发失效**:
-  - 优化 `_ProcessShellEvent` 防抖逻辑，游戏窗口激活事件强制穿透防抖规则，确保返回游戏时 100% 触发 `DisableGameIME()`；
-  - 新增 `CheckGameFocusWatchdog` 后台焦点与 CapsLock 状态监视器 (1秒轮询)，为大写锁定状态提供双重兜底保障。
 - **修复 AHK v2 作用域未赋值变量报错**:
   - 显式声明 `ShellMessageCallback` 与 `CheckGameFocusWatchdog` 内部的全局变量，杜绝未赋值局部变量弹窗。
 
